@@ -2656,54 +2656,126 @@ function printDocument(){
 }
 
 // ─── Cost Estimate ────────────────────────────────────────────────────────────
-var PRICE_DATA={
-  boards:[
-    {name:'16mm White Melamine Board (2750×1830)',unit:'sheet',price:520,qty:0},
-    {name:'18mm White Melamine Board (2750×1830)',unit:'sheet',price:620,qty:0},
-    {name:'3mm Masonite / HDF White (2750×1830)',unit:'sheet',price:180,qty:0},
-    {name:'6mm MDF Board (2750×1830)',unit:'sheet',price:210,qty:0},
+// ─── Default price list (matches Boardware invoice structure) ────────────────
+var DEFAULT_PRICES = {
+  boards: [],  // built dynamically from project selection
+  cutting: [
+    {code:'XCUT',  name:'Board Cutting — per cut (XCUT)',            unit:'cut',  price:60.87, qty:0},
+    {code:'XCUT8', name:'CNC / Double-Up Cut-Outs (XCUT8)',          unit:'job',  price:200.00,qty:0},
+    {code:'XHOLES',name:'Hole Drilling — per hole (XHOLES)',          unit:'hole', price:5.00,  qty:0},
+    {code:'XCNC',  name:'CNC Panel Cut-Outs — per m² (XCNC)',         unit:'m²',   price:470.00,qty:0},
   ],
-  cutting:[
-    {name:'Board Cutting / CNC (per cut)',unit:'cut',price:12,qty:0},
-    {name:'Pocket Hole (per hole)',unit:'hole',price:8,qty:0},
-    {name:'Dowel Boring (per hole)',unit:'hole',price:6,qty:0},
+  edging_mat: [
+    {code:'EH1 1mm', name:'1mm PVC Edging Material — per metre',      unit:'m',    price:5.82,  qty:0},
+    {code:'EH1 2mm', name:'2mm PVC Edging Material — per metre',      unit:'m',    price:13.70, qty:0},
+    {code:'EH1 3mm', name:'3mm / 35mm Fusion Edging — per metre',     unit:'m',    price:22.24, qty:0},
   ],
-  edging:[
-    {name:'PVC Edge Banding 0.4mm (per metre)',unit:'m',price:4,qty:0},
-    {name:'PVC Edge Banding 1mm (per metre)',unit:'m',price:6,qty:0},
-    {name:'PVC Edge Banding 2mm (per metre)',unit:'m',price:9,qty:0},
+  edging_app: [
+    {code:'XEDG',  name:'Apply 1mm Edging — per metre (XEDG)',        unit:'m',    price:3.48,  qty:0},
+    {code:'XEDGH', name:'Apply 2-3mm Edging — per metre (XEDGH)',     unit:'m',    price:6.09,  qty:0},
   ],
-  hinges:[
-    {name:'Blum Clip-Top Hinge 110° (each)',unit:'each',price:45,qty:0},
-    {name:'Blum Hinge Mounting Plate (each)',unit:'each',price:18,qty:0},
-    {name:'Standard Concealed 35mm (each)',unit:'each',price:22,qty:0},
+  hinges: [
+    {code:'GHC 110ST', name:'Metalla 110° Hinge 311.88 (each)',       unit:'each', price:17.94, qty:0},
+    {code:'GHC BLIND', name:'Metalla Blind Corner Hinge (each)',       unit:'each', price:53.82, qty:0},
+    {code:'PLATE',     name:'Hinge Mounting Plate (each)',             unit:'each', price:12.00, qty:0},
   ],
-  handles:[
-    {name:'Bar Handle 128mm CC (each)',unit:'each',price:35,qty:0},
-    {name:'Bar Handle 160mm CC (each)',unit:'each',price:42,qty:0},
-    {name:'Bar Handle 224mm CC (each)',unit:'each',price:55,qty:0},
-    {name:'Round Knob Chrome (each)',unit:'each',price:22,qty:0},
+  handles: [
+    {code:'HDL 128',name:'Bar Handle 128mm CC (each)',                 unit:'each', price:35.00, qty:0},
+    {code:'HDL 160',name:'Bar Handle 160mm CC (each)',                 unit:'each', price:42.00, qty:0},
+    {code:'HDL 224',name:'Bar Handle 224mm CC (each)',                 unit:'each', price:55.00, qty:0},
+    {code:'KNOB',   name:'Round Knob Chrome (each)',                   unit:'each', price:22.00, qty:0},
   ],
-  legs:[
-    {name:'Adjustable Leg 100mm (each)',unit:'each',price:18,qty:0},
-    {name:'Adjustable Leg 150mm (each)',unit:'each',price:22,qty:0},
-    {name:'Kick Board Clip (each)',unit:'each',price:6,qty:0},
+  legs: [
+    {code:'LEG 100',name:'Adjustable Leg 100mm (each)',                unit:'each', price:18.00, qty:0},
+    {code:'LEG 150',name:'Adjustable Leg 150mm (each)',                unit:'each', price:22.00, qty:0},
+    {code:'KCLIP',  name:'Kick Board Clip (each)',                     unit:'each', price:6.00,  qty:0},
   ],
-  rails:[
-    {name:'Drawer Runner 400mm Full Ext (pair)',unit:'pair',price:85,qty:0},
-    {name:'Drawer Runner 500mm Full Ext (pair)',unit:'pair',price:95,qty:0},
-    {name:'Soft-Close Drawer Runner (pair)',unit:'pair',price:145,qty:0},
-    {name:'Wardrobe Hanging Rail 900mm (each)',unit:'each',price:65,qty:0},
-    {name:'Wardrobe Hanging Rail 1200mm (each)',unit:'each',price:85,qty:0},
+  rails: [
+    {code:'DSD 400',name:'Dynaslide 400mm Full Ext Runner (pair)',     unit:'pair', price:65.00, qty:0},
+    {code:'DSD 450',name:'Dynaslide 450mm Full Ext Runner (pair)',     unit:'pair', price:69.23, qty:0},
+    {code:'DSD 500',name:'Dynaslide 500mm Soft-Close (pair)',          unit:'pair', price:145.00,qty:0},
+    {code:'WRAIL',  name:'Wardrobe Hanging Rail 900mm (each)',          unit:'each', price:65.00, qty:0},
   ],
-  fixings:[
-    {name:'Minifix Connector (each)',unit:'each',price:8,qty:0},
-    {name:'PB Screw 4x50mm (box 100)',unit:'box',price:35,qty:0},
-    {name:'Shelf Pin 5mm (each)',unit:'each',price:2,qty:0},
-    {name:'Backing Staples 18mm (box 1000)',unit:'box',price:45,qty:0},
+  fixings: [
+    {code:'CSC 6X40',name:'Chipboard Screw 3.5×40mm (per 1000)',      unit:'1000', price:144.14,qty:0},
+    {code:'CSC 6X30',name:'Chipboard Screw 3.5×30mm (per 1000)',      unit:'1000', price:127.74,qty:0},
+    {code:'SHELF PIN',name:'Shelf Pin 5mm (each)',                     unit:'each', price:2.00,  qty:0},
+    {code:'MINIFIX', name:'Minifix Connector (each)',                  unit:'each', price:8.00,  qty:0},
+    {code:'STAPLE',  name:'Backing Staples 18mm (per 1000)',           unit:'1000', price:45.00, qty:0},
+  ],
+  other: [
+    {code:'XCAR',   name:'Carriage / Delivery (XCAR)',                 unit:'trip', price:260.87,qty:1},
+    {code:'XWRAP',  name:'Wrapping Charges (XWRAP)',                   unit:'job',  price:70.00, qty:0},
   ]
 };
-var CAT_LABELS={boards:'Sheet Material (Boards)',cutting:'Cutting & Machining',edging:'Edge Banding',hinges:'Hinges',handles:'Handles & Knobs',legs:'Legs & Kick Boards',rails:'Rails, Runners & Wardrobe',fixings:'Fixings & Hardware'};
+
+var CAT_LABELS={
+  boards:'Sheet Material',
+  cutting:'Cutting & Machining (Boardware)',
+  edging_mat:'Edge Banding — Material',
+  edging_app:'Edge Banding — Application Charges',
+  hinges:'Hinges & Door Hardware',
+  handles:'Handles & Knobs',
+  legs:'Legs & Kick Boards',
+  rails:'Drawer Runners & Rails',
+  fixings:'Screws, Fixings & Hardware',
+  other:'Other Charges'
+};
+
+var PRICES_KEY = 'carpws_prices';
+
+function loadSavedPrices() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(PRICES_KEY) || 'null');
+    if (!saved) return;
+    // Merge saved prices (by code) into DEFAULT_PRICES without losing new items
+    Object.keys(DEFAULT_PRICES).forEach(function(cat) {
+      if (!saved[cat]) return;
+      DEFAULT_PRICES[cat].forEach(function(item) {
+        var match = saved[cat].find ? saved[cat].find(function(s){return s.code===item.code;}) : null;
+        if (match) item.price = match.price;
+      });
+    });
+  } catch(e) {}
+}
+
+function savePricesToStorage() {
+  var toSave = {};
+  Object.keys(PRICE_DATA).forEach(function(cat) {
+    toSave[cat] = PRICE_DATA[cat].map(function(i){ return {code:i.code, price:i.price}; });
+  });
+  localStorage.setItem(PRICES_KEY, JSON.stringify(toSave));
+}
+
+function exportPriceList() {
+  var blob = new Blob([JSON.stringify(PRICE_DATA, null, 2)], {type:'application/json'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'CarpWS_Prices.json'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function importPriceList(input) {
+  var file = input.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var d = JSON.parse(e.target.result);
+      Object.keys(d).forEach(function(cat) {
+        if (!PRICE_DATA[cat]) return;
+        d[cat].forEach(function(imp) {
+          var match = PRICE_DATA[cat].find ? PRICE_DATA[cat].find(function(i){return i.code===imp.code;}) : null;
+          if (match) { match.price = imp.price; match.qty = imp.qty||match.qty; }
+        });
+      });
+      savePricesToStorage();
+      buildCostEstimate();
+      alert('Price list imported and saved.');
+    } catch(err) { alert('Invalid file: '+err.message); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+var PRICE_DATA = JSON.parse(JSON.stringify(DEFAULT_PRICES)); // working copy
 
 function autoFillQtys(){
   var nC=S.cabinets.length;
@@ -2711,35 +2783,66 @@ function autoFillQtys(){
   var tS=S.cabinets.reduce(function(s,c){return s+c.shelves;},0);
   var hC=S.cabinets.reduce(function(s,c){return s+c.doors*(c.H>900?3:2);},0);
   var bC=S.cabinets.filter(function(c){return c.type==='Base Unit';}).length;
-  // Board sheets
+  // ── Boards: dynamic from project selection ──
   var mainArea=0,backArea=0;
+  CL.forEach(function(r){var a=r.L*r.W*r.qty/1e6;if(r.tag==='BACK')backArea+=a;else mainArea+=a;});
+  PRICE_DATA.boards=[];
+  // Get saved price for main board type if exists
+  var savedPrices = {};
+  try { var sp=JSON.parse(localStorage.getItem(PRICES_KEY)||'null'); if(sp&&sp.boards)sp.boards.forEach(function(b){savedPrices[b.code]=b.price;}); } catch(e){}
+  var mainCode = (S.boardMat||'MEL')+'-'+S.boardThk;
+  var mainName = (S.boardMat||'Melamine Board')+' '+S.boardThk+'mm (2750×1830)';
+  var mainPrice = savedPrices[mainCode] || (S.boardThk>=18 ? 1150.53 : 1050.00);
+  PRICE_DATA.boards.push({code:mainCode,name:mainName,unit:'sheet',price:mainPrice,qty:Math.ceil(mainArea/2.88)+1});
+  if(S.includeBack&&backArea>0){
+    var bkCode=(S.backThk<=3)?'BACK-3MM':'BACK-16MM';
+    var bkName=S.backThk<=3?'3mm Masonite / HDF White (2750×1830)':'16mm Melamine Backing Board (2750×1830)';
+    var bkPrice=savedPrices[bkCode]||(S.backThk<=3?249.75:1050.00);
+    PRICE_DATA.boards.push({code:bkCode,name:bkName,unit:'sheet',price:bkPrice,qty:Math.ceil(backArea/2.88)+1});
+  }
+  // ── Cutting ──
+  var totalCuts=CL.reduce(function(s,r){return s+r.qty*2;},0);
+  pd('cutting','XCUT','qty',totalCuts);
+  // ── Edging ── split into 1mm (carcass) and 2mm (doors)
+  var edge1m=0,edge2m=0;
   CL.forEach(function(r){
-    var a=r.L*r.W*r.qty/1e6;
-    if(r.tag==='BACK')backArea+=a; else mainArea+=a;
+    var eT=(r.tag==='DOOR'?S.doorEdgeThk:S.edgeThk)||1;
+    var em=((r.LS1||0)+(r.LS2||0))*r.L/1000+((r.WS1||0)+(r.WS2||0))*r.W/1000;
+    if(eT<=1) edge1m+=em; else edge2m+=em;
   });
-  PRICE_DATA.boards[0].qty=Math.ceil(mainArea/2.88)+1;
-  PRICE_DATA.boards[2].qty=(S.includeBack&&S.backThk<=3)?Math.ceil(backArea/2.88)+1:0;
-  // Cuts
-  PRICE_DATA.cutting[0].qty=CL.reduce(function(s,r){return s+r.qty*2;},0);
-  // Edging metres
-  var edgeM=Math.ceil(CL.reduce(function(s,r){return s+((r.LS1||0)+(r.LS2||0))*r.L/1000+((r.WS1||0)+(r.WS2||0))*r.W/1000;},0)*1.15);
-  PRICE_DATA.edging[2].qty=edgeM;
-  // Hinges
-  PRICE_DATA.hinges[0].qty=hC; PRICE_DATA.hinges[1].qty=hC;
-  // Handles
-  PRICE_DATA.handles[0].qty=tD;
-  // Legs
-  if(bC>0){PRICE_DATA.legs[0].qty=bC*4;PRICE_DATA.legs[2].qty=bC*4;}
-  // Fixings
-  PRICE_DATA.fixings[0].qty=nC*8;
-  PRICE_DATA.fixings[1].qty=Math.max(1,Math.ceil(nC*16/100));
-  PRICE_DATA.fixings[2].qty=tS*4;
-  if(S.includeBack)PRICE_DATA.fixings[3].qty=nC;
+  edge1m=Math.ceil(edge1m*1.15); edge2m=Math.ceil(edge2m*1.15);
+  pd('edging_mat','EH1 1mm','qty',edge1m);
+  pd('edging_mat','EH1 2mm','qty',edge2m);
+  pd('edging_app','XEDG','qty',edge1m);
+  pd('edging_app','XEDGH','qty',edge2m);
+  // ── Hinges ──
+  pd('hinges','GHC 110ST','qty',hC);
+  pd('hinges','PLATE','qty',hC);
+  // ── Handles ──
+  pd('handles','HDL 128','qty',tD);
+  // ── Legs ──
+  if(bC>0){pd('legs','LEG 100','qty',bC*4);pd('legs','KCLIP','qty',bC*4);}
+  // ── Fixings ──
+  pd('fixings','MINIFIX','qty',nC*8);
+  pd('fixings','SHELF PIN','qty',tS*4);
+  if(S.includeBack) pd('fixings','STAPLE','qty',nC);
+}
+function pd(cat,code,field,val){
+  var item=PRICE_DATA[cat].find?PRICE_DATA[cat].find(function(i){return i.code===code;}):null;
+  if(item)item[field]=val;
 }
 
 function buildCostEstimate(){
+  PRICE_DATA = JSON.parse(JSON.stringify(DEFAULT_PRICES)); // reset to defaults
+  loadSavedPrices();                                        // overlay saved prices
   autoFillQtys();
-  var html='';
+  var html='<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+    +'<button class="btn-sm t-green" onclick="savePricesToStorage();alert(\'Prices saved to browser!\')">💾 Save Prices</button>'
+    +'<button class="btn-sm" onclick="exportPriceList()">↓ Export Prices (.json)</button>'
+    +'<input type="file" id="priceFile" accept=".json" style="display:none" onchange="importPriceList(this)">'
+    +'<button class="btn-sm" onclick="document.getElementById(\'priceFile\').click()">↑ Import Prices</button>'
+    +'<span style="font-size:0.72rem;color:#6b7a9e;align-self:center;margin-left:4px">Prices auto-save when you click Save Prices — survives browser restarts</span>'
+    +'</div>';
   Object.keys(PRICE_DATA).forEach(function(cat){
     var items=PRICE_DATA[cat];
     html+='<div class="cost-cat"><div class="cost-cat-title">'+CAT_LABELS[cat]+'</div>';
@@ -2760,6 +2863,8 @@ function updCostItem(cat,ii,field,val){
   PRICE_DATA[cat][ii][field]=parseFloat(val)||0;
   var el=document.getElementById('csub_'+cat+'_'+ii);
   if(el)el.textContent=(PRICE_DATA[cat][ii].qty*PRICE_DATA[cat][ii].price).toFixed(2);
+  // Also update DEFAULT_PRICES so save captures current unit prices
+  if(DEFAULT_PRICES[cat]&&DEFAULT_PRICES[cat][ii])DEFAULT_PRICES[cat][ii][field]=parseFloat(val)||0;
   updateGrandTotal();
 }
 function updateGrandTotal(){
@@ -2772,11 +2877,4 @@ function updateGrandTotal(){
 // ─── Service Worker registration ──────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js')
-      .then(function(reg) { console.log('[CarpWS] SW registered, scope:', reg.scope); })
-      .catch(function(err) { console.warn('[CarpWS] SW registration failed:', err); });
-  });
-}
-</script>
-</body>
-</html>
+    navigator.
