@@ -115,6 +115,38 @@ canvas{display:block;width:100%}
 .asm-text p{font-size:0.76rem;color:#a0aec0;line-height:1.5}
 .hidden{display:none!important}
 
+
+/* ── Toolbar 3D buttons ─────────────────────────────────────── */
+.btn-sm{background:linear-gradient(160deg,#243a5e 0%,#16213e 100%);border:1px solid #3a5a8f;color:#b0c8e8;border-radius:7px;padding:6px 14px;font-size:0.78rem;font-weight:600;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);transition:all .15s;letter-spacing:.3px;white-space:nowrap}
+.btn-sm:hover{background:linear-gradient(160deg,#2e4e7e 0%,#1e3a5f 100%);color:#fff;border-color:#5a8abf;box-shadow:0 3px 8px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.12);transform:translateY(-1px)}
+.btn-sm:active{transform:translateY(1px);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.btn-sm.t-red{border-color:#e94560;color:#e94560}
+.btn-sm.t-red:hover{background:#e94560;color:#fff}
+.btn-sm.t-green{border-color:#2ecc71;color:#2ecc71}
+.btn-sm.t-green:hover{background:#2ecc71;color:#1a1a2e}
+.btn-sm.t-gold{border-color:#f39c12;color:#f39c12}
+.btn-sm.t-gold:hover{background:#f39c12;color:#1a1a2e}
+.toolbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;padding:7px 18px;background:linear-gradient(90deg,#080f1e 0%,#0f182b 100%);border-bottom:1px solid #1e3a5f;flex-wrap:wrap}
+.toolbar-sep{width:1px;height:20px;background:#1e3a5f;margin:0 3px}
+/* ── Cost Estimate ──────────────────────────────────────────── */
+.cost-cat{background:#0a1828;border:1px solid #2a3a5c;border-left:3px solid #e94560;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:10px}
+.cost-cat-title{font-size:0.83rem;font-weight:700;color:#63b3ed;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.cost-tbl{width:100%;border-collapse:collapse;font-size:0.75rem}
+.cost-tbl th{background:#0f2040;color:#63b3ed;padding:6px 8px;text-align:left;border:1px solid #2a3a5c;font-size:0.7rem;text-transform:uppercase;letter-spacing:.4px}
+.cost-tbl th.r{text-align:right}
+.cost-tbl td{padding:5px 8px;border:1px solid #1a2a40;color:#d0d8e8;vertical-align:middle}
+.cost-tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+.cost-tbl tr:hover td{background:#0f1e35}
+.cost-tbl tr:last-child td{font-weight:600}
+.price-inp{background:#0f3460;border:1px solid #2a3a5c;border-radius:4px;color:#e0e0e0;padding:3px 6px;font-size:0.75rem;width:72px;text-align:right;transition:border .15s}
+.price-inp:focus{border-color:#e94560;outline:none}
+.cost-total-bar{background:linear-gradient(135deg,#0a1e38,#0f2a18);border:1px solid #2ecc71;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.cost-total-bar .lbl{font-size:0.85rem;color:#a0aec0}
+.cost-total-bar .sub-lbl{font-size:0.7rem;color:#4a6a5a;margin-top:2px}
+.cost-total-bar .val{font-size:1.6rem;font-weight:700;color:#2ecc71;font-variant-numeric:tabular-nums}
+/* ── Door click hint ───────────────────────────────────────── */
+.door-hint{font-size:0.7rem;color:#f39c12;padding:4px 10px;background:#1a1200;border-radius:4px;display:inline-block;margin-top:4px}
+
 @media print {
   body { background: #fff !important; color: #000 !important; }
   .step-bar, .sidebar, .tabs, #clSearch, .btn-sm, .stats-grid, button { display: none !important; }
@@ -135,14 +167,19 @@ canvas{display:block;width:100%}
   <button onclick="pwaInstall()" style="margin-left:10px;background:#e94560;color:#fff;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem">Install Now</button>
   <button onclick="document.getElementById('pwaInstallBar').style.display='none'" style="margin-left:6px;background:transparent;color:#7fb3d3;border:none;cursor:pointer;font-size:1rem">✕</button>
 </div>
-<div style="display:flex;justify-content:flex-end;gap:8px;padding:6px 20px;background:#10182b;border-bottom:1px solid #1e3a5f">
-  <button class="btn-sm" onclick="newProject()" title="Start fresh">+ New</button>
+<div class="toolbar">
+  <button class="btn-sm t-red" onclick="newProject()" title="Start new project">＋ New</button>
+  <div class="toolbar-sep"></div>
   <button class="btn-sm" onclick="saveProject()" title="Save to browser">💾 Save</button>
-  <button class="btn-sm" onclick="loadProject()" title="Load saved">📂 Open</button>
-  <button class="btn-sm" onclick="exportProject()" title="Export .json file">⬇ Export</button>
+  <button class="btn-sm" onclick="loadProject()" title="Load saved project">📂 Open</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn-sm" onclick="exportProject()" title="Export project as .json">↓ Export</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(this)">
-  <button class="btn-sm" onclick="document.getElementById('importFile').click()" title="Import .json">⬆ Import</button>
-  <span id="savedTag" style="display:none;color:#2ecc71;font-size:0.72rem;align-self:center">✓ Saved</span>
+  <button class="btn-sm" onclick="document.getElementById('importFile').click()" title="Import project .json">↑ Import</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn-sm t-gold" onclick="printDocument()" title="Print full document">🖨 Print</button>
+  <button class="btn-sm t-green" onclick="exportXLSX()" title="Export XLSX 4-tab">📊 XLSX</button>
+  <span id="savedTag" style="display:none;color:#2ecc71;font-size:0.72rem;align-self:center;padding-left:4px">✓ Saved</span>
 </div>
 <div class="stepper">
   <div class="step-wrap"><div class="step-circle active" id="sc1">1</div><div class="step-label active" id="sl1">Setup</div></div>
@@ -154,6 +191,8 @@ canvas{display:block;width:100%}
   <div class="step-wrap"><div class="step-circle" id="sc4">4</div><div class="step-label" id="sl4">Board Layout</div></div>
   <div class="step-connector" id="cn4"></div>
   <div class="step-wrap"><div class="step-circle" id="sc5">5</div><div class="step-label" id="sl5">3D &amp; Build</div></div>
+  <div class="step-connector" id="cn5"></div>
+  <div class="step-wrap"><div class="step-circle" id="sc6">6</div><div class="step-label" id="sl6">Cost</div></div>
 </div>
 <div class="main">
 
@@ -1539,6 +1578,7 @@ canvas{display:block;width:100%}
     </div>
   </div>
   <div class="legend" id="leg3d"></div>
+  <div class="door-hint">💡 Click any door panel to open / close it &nbsp;·&nbsp; Drag to rotate &nbsp;·&nbsp; Scroll to zoom</div>
 </div>
 <div class="card">
   <div class="card-title">&#x1F527; Hardware &amp; Fixings</div>
@@ -1552,9 +1592,31 @@ canvas{display:block;width:100%}
   <div class="card-title">&#x1F4CB; Material Summary</div>
   <div id="matSummary"></div>
   <div class="btn-row">
-    <button class="btn btn-secondary" onclick="setStep(3)">&larr; Back</button>
-    <button class="btn btn-success" onclick="exportCSV()">&#x1F4E5; Export CSV</button>
-    <button class="btn btn-primary" onclick="window.print()">Print</button>
+    <button class="btn btn-secondary" onclick="setStep(4)">&larr; Back to Layout</button>
+    <button class="btn btn-success" onclick="exportCSV()">&#x1F4E5; Export TSV</button>
+    <button class="btn btn-primary" onclick="goStep6()">Cost Estimate &rarr;</button>
+  </div>
+</div>
+</div>
+
+
+<!-- STEP 6 -->
+<div id="step6" class="hidden">
+<div class="card">
+  <div class="card-title">&#x1F4B0; Proforma Cost Estimate <span style="font-size:0.72rem;color:#6b7a9e;font-weight:400;margin-left:8px">Edit unit prices &amp; quantities — totals update live</span></div>
+  <div class="info">Quantities are auto-estimated from your cutting list. Adjust prices to match your current supplier rates. All amounts in ZAR excl. VAT.</div>
+  <div id="costContent"></div>
+  <div class="cost-total-bar">
+    <div>
+      <div class="lbl">TOTAL ESTIMATED COST (excl. VAT)</div>
+      <div class="sub-lbl">Labour &amp; delivery not included</div>
+    </div>
+    <div class="val" id="grandTotal">R 0.00</div>
+  </div>
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-secondary" onclick="setStep(5)">&larr; Back to 3D &amp; Build</button>
+    <button class="btn btn-success" onclick="printDocument()">🖨 Print Full Quote</button>
+    <button class="btn btn-primary" onclick="exportXLSX()">&#x1F4CA; Export XLSX</button>
   </div>
 </div>
 </div>
@@ -1892,80 +1954,89 @@ function exportXLSX() {
   var wb=XLSX.utils.book_new();
   var d=new Date().toLocaleDateString('en-ZA');
 
+  // helper: styled cell
+  function sc_(v,t,s){var c={v:v,t:t||'s'};if(s)c.s=s;return c;}
+  var HDR_S={font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'C0392B'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{bottom:{style:'medium',color:{rgb:'C0392B'}}}};
+  var TITLE_S={font:{bold:true,color:{rgb:'FFFFFF'},sz:12},fill:{fgColor:{rgb:'8B0000'}},alignment:{horizontal:'left',vertical:'center'}};
+  var INFO_S={font:{bold:true,sz:10},fill:{fgColor:{rgb:'F2F2F2'}},alignment:{horizontal:'left'}};
+  var VAL_S={font:{sz:10},alignment:{horizontal:'left'}};
+  var NUM_S={font:{sz:10},alignment:{horizontal:'center'}};
+  var ALT_S={fill:{fgColor:{rgb:'FFF5F5'}},font:{sz:10}};
+
   // ── CUTTING LIST sheet ───────────────────────────────────────────────────
   var clRows=[
-    ['BOARDWARE OPTIMIZED CUTTING LIST','','','','','','','','boardwareinfo1@gmail.com'],
-    ['CUSTOMER:','','','',S.customer,'','','','','','','','Date:',d],
-    ['CONTACT NO:','','','',S.contactNo],
-    ['JOB NAME:','','','',S.jobName],
-    ['DELIVERY ADDRESS:','','','',S.address],
-    ['ALL SIZES MUST BE INCLUDING EDGING(FINAL) AND IN MM'],
+    ['BOARDWARE OPTIMIZED CUTTING LIST','','','','','','','boardwareinfo1@gmail.com'],
+    ['CUSTOMER:','',S.customer,'','','','','Date:',d],
+    ['CONTACT NO:','',S.contactNo],
+    ['JOB NAME:','',S.jobName],
+    ['DELIVERY ADDRESS:','',S.address],
+    ['ALL SIZES MUST BE INCLUDING EDGING (FINAL) AND IN MM'],
     ['No.','Board','Job or Unit name','LENGTH','WIDTH','QUANTITY','PART DESCRIPTION',
      'Length Side 1','Length Side 2','Width Side 1','Width Side 2','HOLES','Board type','GRAIN']
   ];
-  CL.forEach(function(r){
-    clRows.push([r.no,r.board,r.job,r.L,r.W,r.qty,r.desc,
+  CL.forEach(function(r,i){
+    clRows.push([i+1,r.board,r.job,r.L,r.W,r.qty,r.desc,
       r.LS1||0,r.LS2||0,r.WS1||0,r.WS2||0,r.holes||'',r.btype||'',r.grain||'']);
   });
   var clSheet=XLSX.utils.aoa_to_sheet(clRows);
-  // Merge A1 across
-  clSheet['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
-  clSheet['!cols']=[{wch:6},{wch:20},{wch:22},{wch:9},{wch:9},{wch:9},{wch:28},{wch:12},{wch:12},{wch:12},{wch:12},{wch:22},{wch:20},{wch:7}];
+  // Column widths
+  clSheet['!cols']=[{wch:5},{wch:28},{wch:24},{wch:8},{wch:8},{wch:8},{wch:30},{wch:11},{wch:11},{wch:11},{wch:11},{wch:10},{wch:28},{wch:7}];
+  // Row heights
+  clSheet['!rows']=[{hpt:28},{hpt:18},{hpt:16},{hpt:16},{hpt:16},{hpt:16},{hpt:22}];
+  // Merges
+  clSheet['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:6}},
+    {s:{r:5,c:0},e:{r:5,c:13}}
+  ];
   XLSX.utils.book_append_sheet(wb,clSheet,'CUTTING LIST');
 
   // ── STOCK LIST sheet ─────────────────────────────────────────────────────
-  var slRows=[['SIMPLE NAME','BOARD TYPE','LENGTH','WIDTH','THICKNESS','grain']];
+  var slRows=[['SIMPLE NAME','BOARD TYPE','LENGTH','WIDTH','THICKNESS','GRAIN']];
   STOCK_DATA.forEach(function(s){slRows.push([s.n,s.bt,s.l,s.w,s.k,s.g]);});
   var slSheet=XLSX.utils.aoa_to_sheet(slRows);
-  slSheet['!cols']=[{wch:40},{wch:10},{wch:8},{wch:8},{wch:10},{wch:6}];
+  slSheet['!cols']=[{wch:45},{wch:12},{wch:9},{wch:9},{wch:11},{wch:7}];
+  slSheet['!rows']=[{hpt:20}];
   XLSX.utils.book_append_sheet(wb,slSheet,'STOCK LIST');
 
   // ── EDGING sheet ─────────────────────────────────────────────────────────
-  var edRows=[['SIMPLE NAME','THICKNESS(mm)']];
+  var edRows=[['SIMPLE NAME','THICKNESS (mm)']];
   EDGE_DATA.forEach(function(e){edRows.push([e.n,e.k]);});
   var edSheet=XLSX.utils.aoa_to_sheet(edRows);
-  edSheet['!cols']=[{wch:35},{wch:12}];
+  edSheet['!cols']=[{wch:38},{wch:14}];
+  edSheet['!rows']=[{hpt:20}];
   XLSX.utils.book_append_sheet(wb,edSheet,'EDGING');
 
   // ── IMPORT DATA sheet ────────────────────────────────────────────────────
   var idSheet={};
   var idHdrs=['No.','Board','Jobname','LENGTH','WIDTH','QUANTITY','PART DESCRIPTION',
     'Long Side 1','Long Side 2','Short Side 1','Short Side 2','Board type','GRAIN',
-    'B - LENGTH','B WIDTH','B THICKNESS','COMP NAME','HOLES'];
+    'B-LENGTH','B-WIDTH','B-THICKNESS','COMP NAME','HOLES'];
   var cols='ABCDEFGHIJKLMNOPQR'.split('');
   idHdrs.forEach(function(h,ci){idSheet[cols[ci]+'1']={v:h,t:'s'};});
 
   var nParts=CL.length;
-  var maxRows=Math.max(nParts,100); // at least 100 formula rows
+  var maxRows=Math.max(nParts,100);
   for(var ri=0;ri<maxRows;ri++){
-    var row=ri+2;       // Excel row (data starts at row 2)
-    var clRow=ri+8;     // CUTTING LIST data row (data starts at row 8)
+    var row=ri+2;
+    var clRow=ri+8;
     var rowStr=String(row);
-    // A: sequential number
     idSheet['A'+rowStr]={v:ri+1,t:'n'};
-    // B-K: reference cutting list
     var clCols={B:'B',C:'C',D:'D',E:'E',F:'F',G:'G',H:'H',I:'I',J:'J',K:'K'};
     Object.keys(clCols).forEach(function(ic){
       idSheet[ic+rowStr]={f:"'CUTTING LIST'!"+clCols[ic]+clRow};
     });
-    // L: Board type via VLOOKUP
-    idSheet['L'+rowStr]={f:"VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$B$472,2,FALSE)"};
-    // M: Grain via VLOOKUP
-    idSheet['M'+rowStr]={f:"VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$F$472,6,FALSE)"};
-    // N: Board length via VLOOKUP
-    idSheet['N'+rowStr]={f:"VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,3,FALSE)"};
-    // O: Board width via VLOOKUP
-    idSheet['O'+rowStr]={f:"VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,4,FALSE)"};
-    // P: Board thickness via VLOOKUP
-    idSheet['P'+rowStr]={f:"VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,5,FALSE)"};
-    // Q: Company/customer name
-    idSheet['Q'+rowStr]={f:"'CUTTING LIST'!$E$2"};
-    // R: HOLES from cutting list column L
+    idSheet['L'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$B$472,2,FALSE),\"\")"};
+    idSheet['M'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$F$472,6,FALSE),\"\")"};
+    idSheet['N'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,3,FALSE),\"\")"};
+    idSheet['O'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,4,FALSE),\"\")"};
+    idSheet['P'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,5,FALSE),\"\")"};
+    idSheet['Q'+rowStr]={f:"'CUTTING LIST'!$C$2"};
     idSheet['R'+rowStr]={f:"'CUTTING LIST'!L"+clRow};
   }
   idSheet['!ref']='A1:R'+(maxRows+1);
-  idSheet['!cols']=[{wch:6},{wch:20},{wch:22},{wch:9},{wch:9},{wch:9},{wch:28},
-    {wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:7},{wch:10},{wch:10},{wch:12},{wch:25},{wch:22}];
+  idSheet['!cols']=[{wch:5},{wch:28},{wch:24},{wch:8},{wch:8},{wch:8},{wch:30},
+    {wch:11},{wch:11},{wch:11},{wch:11},{wch:12},{wch:7},{wch:10},{wch:10},{wch:12},{wch:25},{wch:10}];
+  idSheet['!rows']=[{hpt:22}];
   XLSX.utils.book_append_sheet(wb,idSheet,'IMPORT DATA');
 
   // Download
@@ -2220,12 +2291,13 @@ function drawSheet(canvas, sheet, sheetL, sheetW, scale, hasGrain) {
 // ─── End Board Layout ─────────────────────────────────────────────────────────
 
 // ---- Step 4 -> 5 ----
-function goStep5() { setStep(4); setTimeout(function(){ init3D(); buildHW(); buildAsm(); buildMatSummary(); },120); }
+function goStep5() { setStep(5); setTimeout(function(){ init3D(); buildHW(); buildAsm(); buildMatSummary(); },120); }
 
 // ---- 3D Render ----
 var cam={rotX:-20,rotY:30,scale:1,tx:0,ty:0};
-var dragState={active:false,lastX:0,lastY:0};
+var dragState={active:false,lastX:0,lastY:0,moved:false};
 var rafId=null,ctx3d=null,cw=0,ch=0;
+var doorAngles={},doorAnimId=null;
 
 function init3D() {
   var wrap=document.getElementById('d3wrap'),canvas=document.getElementById('c3d');
@@ -2233,9 +2305,13 @@ function init3D() {
   wrap.style.height=DH+'px'; canvas.style.width=DW+'px'; canvas.style.height=DH+'px';
   canvas.width=DW*dpr; canvas.height=DH*dpr;
   ctx3d=canvas.getContext('2d'); ctx3d.scale(dpr,dpr); cw=DW; ch=DH;
-  canvas.onmousedown=function(e){dragState={active:true,lastX:e.clientX,lastY:e.clientY};};
-  canvas.onmousemove=function(e){if(!dragState.active)return;cam.rotY+=(e.clientX-dragState.lastX)*0.4;cam.rotX-=(e.clientY-dragState.lastY)*0.3;cam.rotX=Math.max(-80,Math.min(80,cam.rotX));dragState.lastX=e.clientX;dragState.lastY=e.clientY;schedDraw();};
-  canvas.onmouseup=canvas.onmouseleave=function(){dragState.active=false;};
+  canvas.onmousedown=function(e){dragState={active:true,lastX:e.clientX,lastY:e.clientY,moved:false};};
+  canvas.onmousemove=function(e){if(!dragState.active)return;var dx=e.clientX-dragState.lastX,dy=e.clientY-dragState.lastY;if(Math.abs(dx)>3||Math.abs(dy)>3)dragState.moved=true;cam.rotY+=dx*0.4;cam.rotX-=dy*0.3;cam.rotX=Math.max(-80,Math.min(80,cam.rotX));dragState.lastX=e.clientX;dragState.lastY=e.clientY;schedDraw();};
+  canvas.onmouseup=function(e){
+    if(!dragState.moved){var rect=canvas.getBoundingClientRect();detectDoorClick((e.clientX-rect.left)/(rect.width/cw),(e.clientY-rect.top)/(rect.height/ch));}
+    dragState.active=false;dragState.moved=false;
+  };
+  canvas.onmouseleave=function(){dragState.active=false;};
   canvas.addEventListener('wheel',function(e){e.preventDefault();zoom3D(e.deltaY<0?1.1:0.91);},{passive:false});
   var lastDist=0;
   canvas.addEventListener('touchstart',function(e){if(e.touches.length===1)dragState={active:true,lastX:e.touches[0].clientX,lastY:e.touches[0].clientY};else lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
@@ -2280,7 +2356,7 @@ function draw3D() {
     ctx.strokeStyle=stroke||'rgba(0,0,0,0.3)';ctx.lineWidth=lw||0.5;ctx.stroke();ctx.globalAlpha=1;
   }
   var xOff=-(totW/2);
-  S.cabinets.forEach(function(cab) {
+  S.cabinets.forEach(function(cab,cab_ci) {
     var H=cab.H,W=cab.W,D=cab.D,shelves=cab.shelves,doors=cab.doors,type=cab.type;
     var bT=S.boardThk;
     var x0=sc(xOff),x1=sc(xOff+W),y0=0,y1=sc(H),z0=0,z1=sc(D),bTs=sc(bT);
@@ -2294,7 +2370,7 @@ function draw3D() {
     bufFace([[x0+bTs,y0,z0],[x1-bTs,y0,z0],[x1-bTs,y0+bTs,z0],[x0+bTs,y0+bTs,z0]],'#c0c8d8','#888');
     if(S.includeBack){var bkS=sc(Math.min(S.backThk,6));bufFace([[x0+bTs,y0+bTs,z1-bkS],[x1-bTs,y0+bTs,z1-bkS],[x1-bTs,y1-bTs,z1-bkS],[x0+bTs,y1-bTs,z1-bkS]],'#8a8fa0','#555',0.4,0.85);}
     for(var sv=1;sv<=shelves;sv++){var sy=y0+bTs+(y1-2*bTs)*sv/(shelves+1);bufFace([[x0+bTs,sy,z0],[x1-bTs,sy,z0],[x1-bTs,sy,z1-sc(55)],[x0+bTs,sy,z1-sc(55)]],'#ccd0dc','#888',0.3,0.9);}
-    if(doors>0){var dET2=sc(S.doorEdgeThk);var span=(x1-x0-2*bTs)/doors;for(var dv=0;dv<doors;dv++){var dkx0=x0+bTs+dv*span+sc(1),dkx1=x0+bTs+(dv+1)*span-sc(1),dky0=y0+dET2,dky1=y1-dET2,dz=-sc(3);bufFace([[dkx0,dky0,dz],[dkx1,dky0,dz],[dkx1,dky1,dz],[dkx0,dky1,dz]],'#dde0e8','#aaa');var hx=(dkx0+dkx1)/2,hy=(dky0+dky1)/2;bufFace([[hx-sc(2.5),hy-sc(20),dz-sc(4)],[hx+sc(2.5),hy-sc(20),dz-sc(4)],[hx+sc(2.5),hy+sc(20),dz-sc(4)],[hx-sc(2.5),hy+sc(20),dz-sc(4)]],'#888','#666',0.5,0.9);}}
+    if(doors>0){var dET2=sc(S.doorEdgeThk);var dspan_=(x1-x0-2*bTs)/doors;for(var dv=0;dv<doors;dv++){var dkx0_=x0+bTs+dv*dspan_+sc(1),dky0_=y0+dET2,dky1_=y1-dET2;var dang_=(doorAngles[cab_ci+'-'+dv]||0)*Math.PI/180;var dFreeX_=dkx0_+dspan_*Math.cos(dang_),dFreeZ_=-dspan_*Math.sin(dang_);var dcol=dang_>0.05?'#c8d4e8':'#dde0e8';bufFace([[dkx0_,dky0_,0],[dkx0_+dspan_,dky0_,0],[dkx0_+dspan_,dky1_,0],[dkx0_,dky1_,0]],'#b0bcc8','#888',0.3,0.25);bufFace([[dkx0_,dky0_,0],[dFreeX_,dky0_,dFreeZ_],[dFreeX_,dky1_,dFreeZ_],[dkx0_,dky1_,0]],dcol,'#aaa');var hmx_=(dkx0_+dFreeX_)/2,hmz_=dFreeZ_/2,hmy_=(dky0_+dky1_)/2;bufFace([[hmx_-sc(2.5),hmy_-sc(20),hmz_],[hmx_+sc(2.5),hmy_-sc(20),hmz_],[hmx_+sc(2.5),hmy_+sc(20),hmz_],[hmx_-sc(2.5),hmy_+sc(20),hmz_]],'#888','#666',0.5,0.9);}}
     bufFace([[x0,y0,z0],[x0+sc(2),y0,z0],[x0+sc(2),y1,z0],[x0,y1,z0]],'#e94560','#c00',0.3,0.6);
     bufFace([[x1-sc(2),y0,z0],[x1,y0,z0],[x1,y1,z0],[x1-sc(2),y1,z0]],'#e94560','#c00',0.3,0.6);
     xOff+=W+30;
@@ -2393,9 +2469,9 @@ function buildMatSummary(){
 
 // ---- Navigation ----
 function setStep(n){
-  [1,2,3,4,5].forEach(function(i){var el=document.getElementById('step'+i);if(el)el.classList.toggle('hidden',i!==n);});
-  [1,2,3,4,5].forEach(function(i){var sc=document.getElementById('sc'+i),sl=document.getElementById('sl'+i);if(sc)sc.className='step-circle '+(i<n?'done':i===n?'active':'');if(sl)sl.className='step-label '+(i<n?'done':i===n?'active':'');});
-  [1,2,3,4].forEach(function(i){var c=document.getElementById('cn'+i);if(c)c.className='step-connector '+(i<n?'done':'');});
+  [1,2,3,4,5,6].forEach(function(i){var el=document.getElementById('step'+i);if(el)el.classList.toggle('hidden',i!==n);});
+  [1,2,3,4,5,6].forEach(function(i){var sc_=document.getElementById('sc'+i),sl_=document.getElementById('sl'+i);if(sc_)sc_.className='step-circle '+(i<n?'done':i===n?'active':'');if(sl_)sl_.className='step-label '+(i<n?'done':i===n?'active':'');});
+  [1,2,3,4,5].forEach(function(i){var c=document.getElementById('cn'+i);if(c)c.className='step-connector '+(i<n?'done':'');});
 }
 </script>
 
@@ -2498,6 +2574,201 @@ document.addEventListener('visibilitychange', function() {
 </script>
 
 <script>
+
+// ─── Door click detection ─────────────────────────────────────────────────────
+function detectDoorClick(cx,cy){
+  var radY=cam.rotY*Math.PI/180,radX=cam.rotX*Math.PI/180;
+  var cosY=Math.cos(radY),sinY=Math.sin(radY),cosX=Math.cos(radX),sinX=Math.sin(radX);
+  var totW=S.cabinets.reduce(function(s,c){return s+c.W;},0);
+  var maxH=Math.max.apply(null,S.cabinets.map(function(c){return c.H;}));
+  var bu=Math.min(cw*0.38/totW,ch*0.42/maxH);
+  function sc2(v){return v*bu;}
+  var avgD=S.cabinets.reduce(function(s,c){return s+c.D;},0)/S.cabinets.length;
+  function proj2(x,y,z){var rx=x*cosY-z*sinY,rz=x*sinY+z*cosY,ry2=y*cosX-rz*sinX;return{sx:rx,sy:-ry2};}
+  var _ctr=proj2(0,sc2(maxH*0.5),sc2(avgD*0.5));
+  var _ox2=-_ctr.sx*cam.scale,_oy2=-_ctr.sy*cam.scale;
+  function toSc2(p){return [cw/2+p.sx*cam.scale+_ox2+cam.tx,ch/2+p.sy*cam.scale+_oy2+cam.ty];}
+  var xOff=-(totW/2);
+  var found=false;
+  S.cabinets.forEach(function(cab,ci){
+    if(found){xOff+=cab.W+30;return;}
+    var bT=S.boardThk,bTs=sc2(bT);
+    var x0=sc2(xOff),x1=sc2(xOff+cab.W),y0=0,y1=sc2(cab.H);
+    if(cab.doors>0){
+      var span=(x1-x0-2*bTs)/cab.doors;
+      for(var dv=0;dv<cab.doors;dv++){
+        var dkx0=x0+bTs+dv*span,dkx1=x0+bTs+(dv+1)*span;
+        var dang=(doorAngles[ci+'-'+dv]||0)*Math.PI/180;
+        var dFX=dkx0+span*Math.cos(dang),dFZ=-span*Math.sin(dang);
+        var p0=toSc2(proj2(dkx0,y0,0)),p1=toSc2(proj2(dFX,y0,dFZ)),p2=toSc2(proj2(dFX,y1,dFZ)),p3=toSc2(proj2(dkx0,y1,0));
+        var minX=Math.min(p0[0],p1[0],p2[0],p3[0]),maxX=Math.max(p0[0],p1[0],p2[0],p3[0]);
+        var minY=Math.min(p0[1],p1[1],p2[1],p3[1]),maxY=Math.max(p0[1],p1[1],p2[1],p3[1]);
+        if(cx>=minX&&cx<=maxX&&cy>=minY&&cy<=maxY){toggleDoor(ci,dv);found=true;break;}
+      }
+    }
+    xOff+=cab.W+30;
+  });
+}
+function toggleDoor(ci,dv){
+  var key=ci+'-'+dv;
+  var cur=doorAngles[key]||0;
+  animateDoor(key,cur,cur<45?90:0);
+}
+function animateDoor(key,from,to){
+  if(doorAnimId)cancelAnimationFrame(doorAnimId);
+  var start=null,dur=380;
+  function step(ts){
+    if(!start)start=ts;
+    var p=Math.min((ts-start)/dur,1);
+    var e=p<0.5?2*p*p:-1+(4-2*p)*p;
+    doorAngles[key]=from+(to-from)*e;
+    schedDraw();
+    if(p<1)doorAnimId=requestAnimationFrame(step);
+    else{doorAngles[key]=to;schedDraw();}
+  }
+  doorAnimId=requestAnimationFrame(step);
+}
+
+// ─── goStep6 ─────────────────────────────────────────────────────────────────
+function goStep6(){setStep(6);setTimeout(buildCostEstimate,80);}
+
+// ─── printDocument ────────────────────────────────────────────────────────────
+function printDocument(){
+  var canvas=document.getElementById('c3d');
+  var imgData=canvas?canvas.toDataURL('image/png'):'';
+  var blDiv=document.getElementById('blSheets');
+  var blImgs=[];
+  if(blDiv){blDiv.querySelectorAll('canvas').forEach(function(c){blImgs.push(c.toDataURL('image/png'));});}
+  var rows=CL;
+  var trHtml=rows.map(function(r,i){
+    return '<tr style="background:'+(i%2?'#f9f9f9':'#fff')+'"><td>'+(i+1)+'</td><td>'+r.board+'</td><td>'+r.job+'</td><td>'+r.L+'</td><td>'+r.W+'</td><td>'+r.qty+'</td><td>'+r.desc+'</td><td>'+(r.LS1||'-')+'</td><td>'+(r.LS2||'-')+'</td><td>'+(r.WS1||'-')+'</td><td>'+(r.WS2||'-')+'</td></tr>';
+  }).join('');
+  var w=window.open('','_blank','width=1100,height=800');
+  w.document.write('<!DOCTYPE html><html><head><title>'+S.jobName+' — Cutting List</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:16px}h1{font-size:15px;margin:0 0 2px}h2{font-size:12px;color:#c00;margin:16px 0 6px;border-bottom:1px solid #c00;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#c00;color:#fff;padding:5px 7px;font-size:10px;text-align:left}td{padding:4px 7px;border:1px solid #ddd;font-size:10px}.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c00;padding-bottom:10px;margin-bottom:14px}.info{line-height:1.7;font-size:11px}.logo{font-size:18px;font-weight:700;color:#c00}img{max-width:100%;margin-bottom:6px}@media print{@page{margin:10mm;size:A4 landscape}.no-print{display:none}}</style></head><body>');
+  w.document.write('<div class="hdr"><div><div class="logo">🔨 The Carpenters — Workshop</div><div style="color:#666;font-size:10px">Cabinet Design &amp; Cutting List System</div></div><div class="info"><b>Customer:</b> '+S.customer+'<br><b>Job Name:</b> '+S.jobName+'<br><b>Contact:</b> '+S.contactNo+'<br><b>Delivery:</b> '+S.address+'<br><b>Date:</b> '+new Date().toLocaleDateString('en-ZA')+'</div></div>');
+  w.document.write('<h2>CUTTING LIST — '+rows.length+' Items &nbsp;|&nbsp; Board: '+S.boardMat+' '+S.boardThk+'mm</h2>');
+  w.document.write('<table><thead><tr><th>#</th><th>Board</th><th>Unit Name</th><th>Length</th><th>Width</th><th>Qty</th><th>Description</th><th>LS1</th><th>LS2</th><th>WS1</th><th>WS2</th></tr></thead><tbody>'+trHtml+'</tbody></table>');
+  if(imgData){w.document.write('<h2>3D RENDER</h2><img src="'+imgData+'" style="max-height:320px">');}
+  if(blImgs.length){w.document.write('<h2>BOARD LAYOUT</h2>');blImgs.forEach(function(d){w.document.write('<img src="'+d+'" style="max-height:260px;margin-right:8px">');});}
+  w.document.write('<div class="no-print" style="text-align:center;margin:18px"><button onclick="window.print()" style="padding:8px 24px;background:#c00;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer">🖨 Print / Save PDF</button></div>');
+  w.document.write('</body></html>');
+  w.document.close();w.focus();
+}
+
+// ─── Cost Estimate ────────────────────────────────────────────────────────────
+var PRICE_DATA={
+  boards:[
+    {name:'16mm White Melamine Board (2750×1830)',unit:'sheet',price:520,qty:0},
+    {name:'18mm White Melamine Board (2750×1830)',unit:'sheet',price:620,qty:0},
+    {name:'3mm Masonite / HDF White (2750×1830)',unit:'sheet',price:180,qty:0},
+    {name:'6mm MDF Board (2750×1830)',unit:'sheet',price:210,qty:0},
+  ],
+  cutting:[
+    {name:'Board Cutting / CNC (per cut)',unit:'cut',price:12,qty:0},
+    {name:'Pocket Hole (per hole)',unit:'hole',price:8,qty:0},
+    {name:'Dowel Boring (per hole)',unit:'hole',price:6,qty:0},
+  ],
+  edging:[
+    {name:'PVC Edge Banding 0.4mm (per metre)',unit:'m',price:4,qty:0},
+    {name:'PVC Edge Banding 1mm (per metre)',unit:'m',price:6,qty:0},
+    {name:'PVC Edge Banding 2mm (per metre)',unit:'m',price:9,qty:0},
+  ],
+  hinges:[
+    {name:'Blum Clip-Top Hinge 110° (each)',unit:'each',price:45,qty:0},
+    {name:'Blum Hinge Mounting Plate (each)',unit:'each',price:18,qty:0},
+    {name:'Standard Concealed 35mm (each)',unit:'each',price:22,qty:0},
+  ],
+  handles:[
+    {name:'Bar Handle 128mm CC (each)',unit:'each',price:35,qty:0},
+    {name:'Bar Handle 160mm CC (each)',unit:'each',price:42,qty:0},
+    {name:'Bar Handle 224mm CC (each)',unit:'each',price:55,qty:0},
+    {name:'Round Knob Chrome (each)',unit:'each',price:22,qty:0},
+  ],
+  legs:[
+    {name:'Adjustable Leg 100mm (each)',unit:'each',price:18,qty:0},
+    {name:'Adjustable Leg 150mm (each)',unit:'each',price:22,qty:0},
+    {name:'Kick Board Clip (each)',unit:'each',price:6,qty:0},
+  ],
+  rails:[
+    {name:'Drawer Runner 400mm Full Ext (pair)',unit:'pair',price:85,qty:0},
+    {name:'Drawer Runner 500mm Full Ext (pair)',unit:'pair',price:95,qty:0},
+    {name:'Soft-Close Drawer Runner (pair)',unit:'pair',price:145,qty:0},
+    {name:'Wardrobe Hanging Rail 900mm (each)',unit:'each',price:65,qty:0},
+    {name:'Wardrobe Hanging Rail 1200mm (each)',unit:'each',price:85,qty:0},
+  ],
+  fixings:[
+    {name:'Minifix Connector (each)',unit:'each',price:8,qty:0},
+    {name:'PB Screw 4x50mm (box 100)',unit:'box',price:35,qty:0},
+    {name:'Shelf Pin 5mm (each)',unit:'each',price:2,qty:0},
+    {name:'Backing Staples 18mm (box 1000)',unit:'box',price:45,qty:0},
+  ]
+};
+var CAT_LABELS={boards:'Sheet Material (Boards)',cutting:'Cutting & Machining',edging:'Edge Banding',hinges:'Hinges',handles:'Handles & Knobs',legs:'Legs & Kick Boards',rails:'Rails, Runners & Wardrobe',fixings:'Fixings & Hardware'};
+
+function autoFillQtys(){
+  var nC=S.cabinets.length;
+  var tD=S.cabinets.reduce(function(s,c){return s+c.doors;},0);
+  var tS=S.cabinets.reduce(function(s,c){return s+c.shelves;},0);
+  var hC=S.cabinets.reduce(function(s,c){return s+c.doors*(c.H>900?3:2);},0);
+  var bC=S.cabinets.filter(function(c){return c.type==='Base Unit';}).length;
+  // Board sheets
+  var mainArea=0,backArea=0;
+  CL.forEach(function(r){
+    var a=r.L*r.W*r.qty/1e6;
+    if(r.tag==='BACK')backArea+=a; else mainArea+=a;
+  });
+  PRICE_DATA.boards[0].qty=Math.ceil(mainArea/2.88)+1;
+  PRICE_DATA.boards[2].qty=(S.includeBack&&S.backThk<=3)?Math.ceil(backArea/2.88)+1:0;
+  // Cuts
+  PRICE_DATA.cutting[0].qty=CL.reduce(function(s,r){return s+r.qty*2;},0);
+  // Edging metres
+  var edgeM=Math.ceil(CL.reduce(function(s,r){return s+((r.LS1||0)+(r.LS2||0))*r.L/1000+((r.WS1||0)+(r.WS2||0))*r.W/1000;},0)*1.15);
+  PRICE_DATA.edging[2].qty=edgeM;
+  // Hinges
+  PRICE_DATA.hinges[0].qty=hC; PRICE_DATA.hinges[1].qty=hC;
+  // Handles
+  PRICE_DATA.handles[0].qty=tD;
+  // Legs
+  if(bC>0){PRICE_DATA.legs[0].qty=bC*4;PRICE_DATA.legs[2].qty=bC*4;}
+  // Fixings
+  PRICE_DATA.fixings[0].qty=nC*8;
+  PRICE_DATA.fixings[1].qty=Math.max(1,Math.ceil(nC*16/100));
+  PRICE_DATA.fixings[2].qty=tS*4;
+  if(S.includeBack)PRICE_DATA.fixings[3].qty=nC;
+}
+
+function buildCostEstimate(){
+  autoFillQtys();
+  var html='';
+  Object.keys(PRICE_DATA).forEach(function(cat){
+    var items=PRICE_DATA[cat];
+    html+='<div class="cost-cat"><div class="cost-cat-title">'+CAT_LABELS[cat]+'</div>';
+    html+='<table class="cost-tbl"><thead><tr><th style="width:45%">Item</th><th>Unit</th><th class="r">Qty</th><th class="r">Unit Price (R)</th><th class="r">Subtotal (R)</th></tr></thead><tbody>';
+    items.forEach(function(item,ii){
+      var sub=(item.qty*item.price).toFixed(2);
+      html+='<tr><td>'+item.name+'</td><td style="color:#63b3ed">'+item.unit+'</td>';
+      html+='<td class="r"><input class="price-inp" type="number" min="0" value="'+item.qty+'" onchange="updCostItem(\''+cat+'\','+ii+',\'qty\',this.value)"></td>';
+      html+='<td class="r"><input class="price-inp" type="number" min="0" step="0.01" value="'+item.price+'" onchange="updCostItem(\''+cat+'\','+ii+',\'price\',this.value)"></td>';
+      html+='<td class="r" id="csub_'+cat+'_'+ii+'">'+sub+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  });
+  document.getElementById('costContent').innerHTML=html;
+  updateGrandTotal();
+}
+function updCostItem(cat,ii,field,val){
+  PRICE_DATA[cat][ii][field]=parseFloat(val)||0;
+  var el=document.getElementById('csub_'+cat+'_'+ii);
+  if(el)el.textContent=(PRICE_DATA[cat][ii].qty*PRICE_DATA[cat][ii].price).toFixed(2);
+  updateGrandTotal();
+}
+function updateGrandTotal(){
+  var total=0;
+  Object.keys(PRICE_DATA).forEach(function(cat){PRICE_DATA[cat].forEach(function(item){total+=item.qty*item.price;});});
+  var el=document.getElementById('grandTotal');
+  if(el)el.textContent='R '+total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+
 // ─── Service Worker registration ──────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
