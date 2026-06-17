@@ -147,12 +147,35 @@ canvas{display:block;width:100%}
 /* ── Door click hint ───────────────────────────────────────── */
 .door-hint{font-size:0.7rem;color:#f39c12;padding:4px 10px;background:#1a1200;border-radius:4px;display:inline-block;margin-top:4px}
 
+/* Step clickable */
+.step-circle{cursor:pointer}
+.step-circle:hover{opacity:0.82;transform:scale(1.08)}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center}
+.modal{background:#16213e;border:1px solid #2a3a5c;border-radius:12px;padding:22px;min-width:340px;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.7)}
+.modal h3{color:#e94560;margin:0 0 14px;font-size:1rem}
+.modal-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1e2d4a;font-size:0.85rem;color:#d0d8e8}
+.modal-row:last-child{border:none}
+.modal-row input[type=checkbox]{width:17px;height:17px;accent-color:#e94560;cursor:pointer}
+.modal-row label{cursor:pointer;flex:1}
+.modal-row .pg-num{background:#e94560;color:#fff;border-radius:4px;padding:1px 7px;font-size:0.72rem;font-weight:700}
+.modal-btns{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
 @media print {
-  body { background: #fff !important; color: #000 !important; }
-  .step-bar, .sidebar, .tabs, #clSearch, .btn-sm, .stats-grid, button { display: none !important; }
-  .bw-wrap { overflow: visible !important; }
-  table { font-size: 10px; }
-  .pt-g,.pt-d,.pt-b,.pt-s,.pt-bk,.pt-k,.pt-o { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body{background:#fff!important;color:#000!important}
+  .header,.toolbar,.stepper,.modal-bg,button,.btn,.btn-sm,.door-hint,
+  #pwaInstallBar,.d3-controls,.legend,.hw-grid,#asmList,#matSummary,
+  .tabs,#clSearch,.card-title .badge{display:none!important}
+  .main{padding:0!important;max-width:100%!important}
+  .card{border:none!important;padding:4px 0!important;margin:0!important;background:#fff!important}
+  .bw-wrap{overflow:visible!important}
+  table.bw{font-size:9px}
+  table.bw th{background:#c0392b!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pt-g,.pt-d,.pt-b,.pt-s,.pt-bk,.pt-k,.pt-o{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .print-page-break{page-break-before:always}
+  .print-hide{display:none!important}
+  .print-show{display:block!important}
+  #printSection{display:block!important}
+  canvas{max-width:100%}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -168,31 +191,33 @@ canvas{display:block;width:100%}
   <button onclick="document.getElementById('pwaInstallBar').style.display='none'" style="margin-left:6px;background:transparent;color:#7fb3d3;border:none;cursor:pointer;font-size:1rem">✕</button>
 </div>
 <div class="toolbar">
-  <button class="btn-sm t-red" onclick="newProject()" title="Start new project">＋ New</button>
+  <button class="btn-sm" onclick="navToStep(1)" title="Go to Setup / Home">🏠 Home</button>
   <div class="toolbar-sep"></div>
+  <button class="btn-sm t-red" onclick="newProject()" title="Start new project">＋ New</button>
   <button class="btn-sm" onclick="saveProject()" title="Save to browser">💾 Save</button>
   <button class="btn-sm" onclick="loadProject()" title="Load saved project">📂 Open</button>
   <div class="toolbar-sep"></div>
-  <button class="btn-sm" onclick="exportProject()" title="Export project as .json">↓ Export</button>
+  <button class="btn-sm" onclick="exportProject()" title="Export project as .json">↓ Project</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(this)">
-  <button class="btn-sm" onclick="document.getElementById('importFile').click()" title="Import project .json">↑ Import</button>
+  <button class="btn-sm" onclick="document.getElementById('importFile').click()" title="Import project .json">↑ Project</button>
   <div class="toolbar-sep"></div>
-  <button class="btn-sm t-gold" onclick="printDocument()" title="Print full document">🖨 Print</button>
-  <button class="btn-sm t-green" onclick="exportXLSX()" title="Export XLSX 4-tab">📊 XLSX</button>
+  <button class="btn-sm t-green" onclick="exportXLSX()" title="Export XLSX 4-tab for Boardware">📊 XLSX</button>
+  <button class="btn-sm t-gold" onclick="showPrintModal()" title="Print / select pages">🖨 Print</button>
+  <button class="btn-sm" onclick="showEmailModal()" title="Email to supplier or client">✉ Email</button>
   <span id="savedTag" style="display:none;color:#2ecc71;font-size:0.72rem;align-self:center;padding-left:4px">✓ Saved</span>
 </div>
 <div class="stepper">
-  <div class="step-wrap"><div class="step-circle active" id="sc1">1</div><div class="step-label active" id="sl1">Setup</div></div>
+  <div class="step-wrap"><div class="step-circle active" id="sc1" onclick="navToStep(1)" title="Setup">1</div><div class="step-label active" id="sl1">Setup</div></div>
   <div class="step-connector" id="cn1"></div>
-  <div class="step-wrap"><div class="step-circle" id="sc2">2</div><div class="step-label" id="sl2">Cupboards</div></div>
+  <div class="step-wrap"><div class="step-circle" id="sc2" onclick="navToStep(2)" title="Cupboards">2</div><div class="step-label" id="sl2">Cupboards</div></div>
   <div class="step-connector" id="cn2"></div>
-  <div class="step-wrap"><div class="step-circle" id="sc3">3</div><div class="step-label" id="sl3">Cutting List</div></div>
+  <div class="step-wrap"><div class="step-circle" id="sc3" onclick="navToStep(3)" title="Cutting List">3</div><div class="step-label" id="sl3">Cutting List</div></div>
   <div class="step-connector" id="cn3"></div>
-  <div class="step-wrap"><div class="step-circle" id="sc4">4</div><div class="step-label" id="sl4">Board Layout</div></div>
+  <div class="step-wrap"><div class="step-circle" id="sc4" onclick="navToStep(4)" title="Board Layout">4</div><div class="step-label" id="sl4">Board Layout</div></div>
   <div class="step-connector" id="cn4"></div>
-  <div class="step-wrap"><div class="step-circle" id="sc5">5</div><div class="step-label" id="sl5">3D &amp; Build</div></div>
+  <div class="step-wrap"><div class="step-circle" id="sc5" onclick="navToStep(5)" title="3D & Build">5</div><div class="step-label" id="sl5">3D &amp; Build</div></div>
   <div class="step-connector" id="cn5"></div>
-  <div class="step-wrap"><div class="step-circle" id="sc6">6</div><div class="step-label" id="sl6">Cost</div></div>
+  <div class="step-wrap"><div class="step-circle" id="sc6" onclick="navToStep(6)" title="Cost Estimate">6</div><div class="step-label" id="sl6">Cost</div></div>
 </div>
 <div class="main">
 
@@ -206,6 +231,10 @@ canvas{display:block;width:100%}
     <div><label class="lbl">Job Name</label><input type="text" id="jobName" placeholder="e.g. Garage Cupboards"></div>
     <div><label class="lbl">Contact No.</label><input type="text" id="contactNo" placeholder="082 555 1234"></div>
     <div><label class="lbl">Delivery Address</label><input type="text" id="address" placeholder="123 Main Rd"></div>
+  </div>
+  <div class="row">
+    <div><label class="lbl">Supplier Email (Boardware)</label><input type="text" id="supplierEmail" placeholder="boardwareinfo1@gmail.com" onchange="S.supplierEmail=this.value"></div>
+    <div><label class="lbl">Client Email</label><input type="text" id="clientEmail" placeholder="client@example.com" onchange="S.clientEmail=this.value"></div>
   </div>
   <div class="row">
     <div><label class="lbl">How many cupboards?</label><input type="number" id="numCabs" value="3" min="1" max="20"></div>
@@ -1949,8 +1978,22 @@ function filterRows(tag,el) { document.querySelectorAll('.tab').forEach(function
 
 // ---- Export CSV ----
 
-function exportXLSX() {
-  if(typeof XLSX==='undefined'){alert('SheetJS not loaded — check internet connection');return;}
+// Dynamic SheetJS loader with fallback CDN
+function ensureXLSX(cb){
+  if(window.XLSX){cb();return;}
+  function tryLoad(url,fallback){
+    var s=document.createElement('script');s.src=url;
+    s.onload=function(){if(window.XLSX){cb();}else if(fallback){tryLoad(fallback,null);}else{alert('XLSX library failed to load.');} };
+    s.onerror=function(){if(fallback){tryLoad(fallback,null);}else{alert('XLSX export needs an internet connection. Please connect and try again.');} };
+    document.head.appendChild(s);
+  }
+  tryLoad('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+          'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js');
+}
+
+function exportXLSX(){ensureXLSX(function(){_doExportXLSX();});}
+
+function _doExportXLSX() {
   var wb=XLSX.utils.book_new();
   var d=new Date().toLocaleDateString('en-ZA');
 
@@ -1963,30 +2006,33 @@ function exportXLSX() {
   var NUM_S={font:{sz:10},alignment:{horizontal:'center'}};
   var ALT_S={fill:{fgColor:{rgb:'FFF5F5'}},font:{sz:10}};
 
-  // ── CUTTING LIST sheet ───────────────────────────────────────────────────
+  // ── CUTTING LIST sheet — identical layout to Boardware template ────────────
   var clRows=[
-    ['BOARDWARE OPTIMIZED CUTTING LIST','','','','','','','boardwareinfo1@gmail.com'],
-    ['CUSTOMER:','',S.customer,'','','','','Date:',d],
-    ['CONTACT NO:','',S.contactNo],
-    ['JOB NAME:','',S.jobName],
-    ['DELIVERY ADDRESS:','',S.address],
-    ['ALL SIZES MUST BE INCLUDING EDGING (FINAL) AND IN MM'],
+    ['BOARDWARE OPTIMIZED CUTTING LIST','','','','','','','','boardwareinfo1@gmail.com','','','','','','',''],
+    ['CUSTOMER:','','',S.customer,'','','','','','','','','Date:','',d,''],
+    ['CONTACT NO:','','',S.contactNo],
+    ['JOB NAME:','','',S.jobName],
+    ['DELIVERY ADDRESS:','','',S.address],
+    ['ALL SIZES MUST BE INCLUDING EDGING[FINAL] AND IN MM','','','','','','','','','','','','','','',''],
     ['No.','Board','Job or Unit name','LENGTH','WIDTH','QUANTITY','PART DESCRIPTION',
-     'Length Side 1','Length Side 2','Width Side 1','Width Side 2','HOLES','Board type','GRAIN']
+     'Length Side 1','Length Side 2','Width Side 1','Width Side 2','HOLES','Board type','GRAIN','Size Check','Test Area','mm','Blade Width','DOORS/NO']
   ];
   CL.forEach(function(r,i){
     clRows.push([i+1,r.board,r.job,r.L,r.W,r.qty,r.desc,
-      r.LS1||0,r.LS2||0,r.WS1||0,r.WS2||0,r.holes||'',r.btype||'',r.grain||'']);
+      r.LS1||0,r.LS2||0,r.WS1||0,r.WS2||0,r.holes||'',r.btype||'',r.grain||'',
+      '','','','',r.doorsNo||0]);
   });
   var clSheet=XLSX.utils.aoa_to_sheet(clRows);
-  // Column widths
-  clSheet['!cols']=[{wch:5},{wch:28},{wch:24},{wch:8},{wch:8},{wch:8},{wch:30},{wch:11},{wch:11},{wch:11},{wch:11},{wch:10},{wch:28},{wch:7}];
-  // Row heights
-  clSheet['!rows']=[{hpt:28},{hpt:18},{hpt:16},{hpt:16},{hpt:16},{hpt:16},{hpt:22}];
-  // Merges
+  clSheet['!cols']=[
+    {wch:5},{wch:24},{wch:22},{wch:8},{wch:8},{wch:8},{wch:28},
+    {wch:11},{wch:11},{wch:11},{wch:11},{wch:8},{wch:24},{wch:7},
+    {wch:10},{wch:10},{wch:6},{wch:10},{wch:10}
+  ];
+  clSheet['!rows']=[{hpt:26},{hpt:18},{hpt:16},{hpt:16},{hpt:16},{hpt:16},{hpt:22}];
   clSheet['!merges']=[
-    {s:{r:0,c:0},e:{r:0,c:6}},
-    {s:{r:5,c:0},e:{r:5,c:13}}
+    {s:{r:0,c:0},e:{r:0,c:7}},
+    {s:{r:1,c:0},e:{r:1,c:2}},
+    {s:{r:5,c:0},e:{r:5,c:18}}
   ];
   XLSX.utils.book_append_sheet(wb,clSheet,'CUTTING LIST');
 
@@ -2015,27 +2061,37 @@ function exportXLSX() {
   idHdrs.forEach(function(h,ci){idSheet[cols[ci]+'1']={v:h,t:'s'};});
 
   var nParts=CL.length;
-  var maxRows=Math.max(nParts,100);
+  var maxRows=Math.max(nParts,1000);
   for(var ri=0;ri<maxRows;ri++){
     var row=ri+2;
-    var clRow=ri+8;
+    var clRow=ri+8;  // CL data starts at Excel row 8
     var rowStr=String(row);
     idSheet['A'+rowStr]={v:ri+1,t:'n'};
-    var clCols={B:'B',C:'C',D:'D',E:'E',F:'F',G:'G',H:'H',I:'I',J:'J',K:'K'};
-    Object.keys(clCols).forEach(function(ic){
-      idSheet[ic+rowStr]={f:"'CUTTING LIST'!"+clCols[ic]+clRow};
+    // B-K: pull from CUTTING LIST — wrap with IF to avoid #REF! on empty rows
+    ['B','C','D','E','F','G','H','I','J','K'].forEach(function(ic){
+      idSheet[ic+rowStr]={f:"IF('CUTTING LIST'!A"+clRow+'=""," ",IFERROR(\'CUTTING LIST\'!'+ic+clRow+'," "))'};
     });
-    idSheet['L'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$B$472,2,FALSE),\"\")"};
-    idSheet['M'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$F$472,6,FALSE),\"\")"};
-    idSheet['N'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,3,FALSE),\"\")"};
-    idSheet['O'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,4,FALSE),\"\")"};
-    idSheet['P'+rowStr]={f:"IFERROR(VLOOKUP(B"+rowStr+",'STOCK LIST'!$A$2:$E$472,5,FALSE),\"\")"};
-    idSheet['Q'+rowStr]={f:"'CUTTING LIST'!$C$2"};
-    idSheet['R'+rowStr]={f:"'CUTTING LIST'!L"+clRow};
+    // L: Board type via VLOOKUP
+    idSheet['L'+rowStr]={f:'IF(B'+rowStr+'=" "," ",IFERROR(VLOOKUP(B'+rowStr+",'STOCK LIST'!$A$2:$B$472,2,FALSE),\" \"))"};
+    // M: Grain
+    idSheet['M'+rowStr]={f:'IF(B'+rowStr+'=" "," ",IFERROR(VLOOKUP(B'+rowStr+",'STOCK LIST'!$A$2:$F$472,6,FALSE),\" \"))"};
+    // N: Board Length
+    idSheet['N'+rowStr]={f:'IF(B'+rowStr+'=" "," ",IFERROR(VLOOKUP(B'+rowStr+",'STOCK LIST'!$A$2:$E$472,3,FALSE),\" \"))"};
+    // O: Board Width
+    idSheet['O'+rowStr]={f:'IF(B'+rowStr+'=" "," ",IFERROR(VLOOKUP(B'+rowStr+",'STOCK LIST'!$A$2:$E$472,4,FALSE),\" \"))"};
+    // P: Board Thickness
+    idSheet['P'+rowStr]={f:'IF(B'+rowStr+'=" "," ",IFERROR(VLOOKUP(B'+rowStr+",'STOCK LIST'!$A$2:$E$472,5,FALSE),\" \"))"};
+    // Q: Customer name from CL header
+    idSheet['Q'+rowStr]={f:"'CUTTING LIST'!$D$2"};
+    // R: HOLES from CL column L
+    idSheet['R'+rowStr]={f:"IF('CUTTING LIST'!A"+clRow+'=""," ",IFERROR(\'CUTTING LIST\'!L'+clRow+'," "))'};
   }
   idSheet['!ref']='A1:R'+(maxRows+1);
-  idSheet['!cols']=[{wch:5},{wch:28},{wch:24},{wch:8},{wch:8},{wch:8},{wch:30},
-    {wch:11},{wch:11},{wch:11},{wch:11},{wch:12},{wch:7},{wch:10},{wch:10},{wch:12},{wch:25},{wch:10}];
+  idSheet['!cols']=[
+    {wch:5},{wch:24},{wch:22},{wch:8},{wch:8},{wch:8},{wch:28},
+    {wch:11},{wch:11},{wch:11},{wch:11},{wch:12},{wch:7},
+    {wch:10},{wch:10},{wch:12},{wch:25},{wch:10}
+  ];
   idSheet['!rows']=[{hpt:22}];
   XLSX.utils.book_append_sheet(wb,idSheet,'IMPORT DATA');
 
@@ -2643,16 +2699,8 @@ function printDocument(){
   var trHtml=rows.map(function(r,i){
     return '<tr style="background:'+(i%2?'#f9f9f9':'#fff')+'"><td>'+(i+1)+'</td><td>'+r.board+'</td><td>'+r.job+'</td><td>'+r.L+'</td><td>'+r.W+'</td><td>'+r.qty+'</td><td>'+r.desc+'</td><td>'+(r.LS1||'-')+'</td><td>'+(r.LS2||'-')+'</td><td>'+(r.WS1||'-')+'</td><td>'+(r.WS2||'-')+'</td></tr>';
   }).join('');
-  var w=window.open('','_blank','width=1100,height=800');
-  w.document.write('<!DOCTYPE html><html><head><title>'+S.jobName+' — Cutting List</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:16px}h1{font-size:15px;margin:0 0 2px}h2{font-size:12px;color:#c00;margin:16px 0 6px;border-bottom:1px solid #c00;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#c00;color:#fff;padding:5px 7px;font-size:10px;text-align:left}td{padding:4px 7px;border:1px solid #ddd;font-size:10px}.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c00;padding-bottom:10px;margin-bottom:14px}.info{line-height:1.7;font-size:11px}.logo{font-size:18px;font-weight:700;color:#c00}img{max-width:100%;margin-bottom:6px}@media print{@page{margin:10mm;size:A4 landscape}.no-print{display:none}}</style></head><body>');
-  w.document.write('<div class="hdr"><div><div class="logo">🔨 The Carpenters — Workshop</div><div style="color:#666;font-size:10px">Cabinet Design &amp; Cutting List System</div></div><div class="info"><b>Customer:</b> '+S.customer+'<br><b>Job Name:</b> '+S.jobName+'<br><b>Contact:</b> '+S.contactNo+'<br><b>Delivery:</b> '+S.address+'<br><b>Date:</b> '+new Date().toLocaleDateString('en-ZA')+'</div></div>');
-  w.document.write('<h2>CUTTING LIST — '+rows.length+' Items &nbsp;|&nbsp; Board: '+S.boardMat+' '+S.boardThk+'mm</h2>');
-  w.document.write('<table><thead><tr><th>#</th><th>Board</th><th>Unit Name</th><th>Length</th><th>Width</th><th>Qty</th><th>Description</th><th>LS1</th><th>LS2</th><th>WS1</th><th>WS2</th></tr></thead><tbody>'+trHtml+'</tbody></table>');
-  if(imgData){w.document.write('<h2>3D RENDER</h2><img src="'+imgData+'" style="max-height:320px">');}
-  if(blImgs.length){w.document.write('<h2>BOARD LAYOUT</h2>');blImgs.forEach(function(d){w.document.write('<img src="'+d+'" style="max-height:260px;margin-right:8px">');});}
-  w.document.write('<div class="no-print" style="text-align:center;margin:18px"><button onclick="window.print()" style="padding:8px 24px;background:#c00;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer">🖨 Print / Save PDF</button></div>');
-  w.document.write('</body></html>');
-  w.document.close();w.focus();
+  // Use the main print modal instead (avoids popup blockers)
+  showPrintModal();
 }
 
 // ─── Cost Estimate ────────────────────────────────────────────────────────────
@@ -2877,4 +2925,193 @@ function updateGrandTotal(){
 // ─── Service Worker registration ──────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+    console.log('SW registered',reg);
+  }).catch(function(err){
+    console.log('SW error',err);
+  });
+});
+}
+</script>
+<!-- Print Modal -->
+<div id="printModal" class="modal-bg" style="display:none" onclick="if(event.target===this)closePrintModal()">
+  <div class="modal">
+    <h3>🖨 Select Pages to Print</h3>
+    <div class="modal-row"><input type="checkbox" id="pg1" checked><span class="pg-num">P1</span><label for="pg1">Project Info &amp; Setup</label></div>
+    <div class="modal-row"><input type="checkbox" id="pg2" checked><span class="pg-num">P2</span><label for="pg2">Cutting List</label></div>
+    <div class="modal-row"><input type="checkbox" id="pg3" checked><span class="pg-num">P3</span><label for="pg3">Board Layout</label></div>
+    <div class="modal-row"><input type="checkbox" id="pg4" checked><span class="pg-num">P4</span><label for="pg4">3D Render &amp; Build Guide</label></div>
+    <div class="modal-row"><input type="checkbox" id="pg5"><span class="pg-num">P5</span><label for="pg5">Cost Estimate</label></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closePrintModal()" style="padding:7px 16px;background:#2a3a5c;border:none;border-radius:6px;color:#d0d8e8;cursor:pointer">Cancel</button>
+      <button onclick="doPrint()" style="padding:7px 18px;background:#e94560;border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div id="emailModal" class="modal-bg" style="display:none" onclick="if(event.target===this)closeEmailModal()">
+  <div class="modal">
+    <h3>✉ Email Documents</h3>
+    <div style="margin-bottom:12px">
+      <label class="lbl">Supplier Email</label>
+      <input type="text" id="emSupplier" class="fld" style="margin-bottom:8px" placeholder="boardwareinfo1@gmail.com">
+      <label class="lbl">Client Email</label>
+      <input type="text" id="emClient" class="fld" placeholder="client@example.com">
+    </div>
+    <div style="font-size:0.76rem;color:#6b7a9e;margin-bottom:12px;background:#0a1628;padding:8px;border-radius:6px;line-height:1.6">
+      ℹ Clicking Email will:<br>
+      1. Download the XLSX cutting list<br>
+      2. Open your email app with subject &amp; body pre-filled<br>
+      3. Attach the downloaded XLSX before sending
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button style="flex:1;padding:8px;background:#2a3a5c;border:none;border-radius:6px;color:#d0d8e8;cursor:pointer" onclick="doEmail('supplier')">📧 Email Supplier</button>
+      <button style="flex:1;padding:8px;background:#e94560;border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer" onclick="doEmail('client')">📧 Email Client</button>
+    </div>
+    <div style="text-align:right"><button onclick="closeEmailModal()" style="padding:7px 16px;background:#2a3a5c;border:none;border-radius:6px;color:#d0d8e8;cursor:pointer">Close</button></div>
+  </div>
+</div>
+
+<script>
+// ─── Navigation: clickable step circles ─────────────────────────────────────
+function navToStep(n){
+  if(n===1){setStep(1);}
+  else if(n===2){setStep(2);}
+  else if(n===3){if(!CL||!CL.length){buildCL();}setStep(3);}
+  else if(n===4){goStep4();}
+  else if(n===5){goStep5();}
+  else if(n===6){goStep6();}
+}
+
+// ─── Print modal ─────────────────────────────────────────────────────────────
+function showPrintModal(){document.getElementById('printModal').style.display='flex';}
+function closePrintModal(){document.getElementById('printModal').style.display='none';}
+
+function doPrint(){
+  closePrintModal();
+  var p1=document.getElementById('pg1').checked;
+  var p2=document.getElementById('pg2').checked;
+  var p3=document.getElementById('pg3').checked;
+  var p4=document.getElementById('pg4').checked;
+  var p5=document.getElementById('pg5').checked;
+
+  var c3dImg='';
+  try{var cv=document.getElementById('c3d');if(cv)c3dImg=cv.toDataURL('image/png');}catch(e){}
+  var blImgs=[];
+  try{var blEl=document.getElementById('blSheets');if(blEl)blEl.querySelectorAll('canvas').forEach(function(c){blImgs.push(c.toDataURL('image/png'));});}catch(e){}
+
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+escH(S.jobName)+' — Carpenters Workshop</title><style>';
+  html+='*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:16px}';
+  html+='h2{font-size:12px;color:#c00;margin:14px 0 5px;border-bottom:2px solid #c00;padding-bottom:3px}';
+  html+='table{width:100%;border-collapse:collapse;margin-bottom:10px}';
+  html+='th{background:#c00!important;color:#fff!important;padding:4px 6px;font-size:9px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+  html+='td{padding:3px 6px;border:1px solid #ddd;font-size:9px}tr:nth-child(even)td{background:#f5f5f5}';
+  html+='.hdr{display:flex;justify-content:space-between;border-bottom:3px solid #c00;padding-bottom:8px;margin-bottom:12px}';
+  html+='.logo{font-size:16px;font-weight:700;color:#c00}.info{font-size:10px;line-height:1.7}';
+  html+='.pb{page-break-before:always}img{max-width:100%;height:auto}';
+  html+='.nopr{display:none}@page{margin:8mm;size:A4 landscape}';
+  html+='@media print{.nopr{display:none}}';
+  html+='</style></head><body>';
+  html+='<div class="hdr"><div><div class="logo">🔨 The Carpenters — Workshop</div><div style="color:#666;font-size:10px">Cabinet Design &amp; Cutting List</div></div>';
+  html+='<div class="info"><b>Customer:</b> '+escH(S.customer)+'<br><b>Job:</b> '+escH(S.jobName)+'<br><b>Contact:</b> '+escH(S.contactNo)+'<br><b>Date:</b> '+new Date().toLocaleDateString("en-ZA")+'</div></div>';
+
+  if(p1){
+    html+='<h2>PAGE 1 — PROJECT INFORMATION</h2>';
+    html+='<table><tbody>';
+    html+='<tr><td><b>Customer</b></td><td>'+escH(S.customer)+'</td><td><b>Job Name</b></td><td>'+escH(S.jobName)+'</td></tr>';
+    html+='<tr><td><b>Contact No</b></td><td>'+escH(S.contactNo)+'</td><td><b>Delivery Address</b></td><td>'+escH(S.address)+'</td></tr>';
+    html+='<tr><td><b>Board Material</b></td><td>'+escH(S.boardMat)+' '+S.boardThk+'mm</td><td><b>No. of Units</b></td><td>'+S.cabinets.length+'</td></tr>';
+    html+='<tr><td><b>Supplier Email</b></td><td>'+escH(S.supplierEmail||"")+'</td><td><b>Client Email</b></td><td>'+escH(S.clientEmail||"")+'</td></tr>';
+    html+='</tbody></table>';
+    html+='<table><thead><tr><th>#</th><th>Unit Name</th><th>Type</th><th>Height</th><th>Width</th><th>Depth</th><th>Doors</th><th>Shelves</th></tr></thead><tbody>';
+    S.cabinets.forEach(function(c,i){html+='<tr><td>'+(i+1)+'</td><td>'+escH(c.name||'Unit '+(i+1))+'</td><td>'+escH(c.type||'')+'</td><td>'+c.H+'</td><td>'+c.W+'</td><td>'+c.D+'</td><td>'+c.doors+'</td><td>'+c.shelves+'</td></tr>';});
+    html+='</tbody></table>';
+  }
+
+  if(p2&&CL&&CL.length){
+    html+=(p1?'<div class="pb"></div>':'')+'<h2>PAGE 2 — CUTTING LIST ('+CL.length+' Items)</h2>';
+    html+='<table><thead><tr><th>#</th><th>Board</th><th>Unit Name</th><th>Length</th><th>Width</th><th>Qty</th><th>Description</th><th>LS1</th><th>LS2</th><th>WS1</th><th>WS2</th><th>Holes</th></tr></thead><tbody>';
+    CL.forEach(function(r){html+='<tr><td>'+r.no+'</td><td>'+escH(r.board||"")+'</td><td>'+escH(r.job||"")+'</td><td>'+r.L+'</td><td>'+r.W+'</td><td>'+r.qty+'</td><td>'+escH(r.desc||"")+'</td><td>'+(r.LS1||"-")+'</td><td>'+(r.LS2||"-")+'</td><td>'+(r.WS1||"-")+'</td><td>'+(r.WS2||"-")+'</td><td>'+(r.holes||"-")+'</td></tr>';});
+    html+='</tbody></table>';
+  }
+
+  if(p3&&blImgs.length){
+    html+='<div class="pb"></div><h2>PAGE 3 — BOARD LAYOUT</h2>';
+    blImgs.forEach(function(d){html+='<img src="'+d+'" style="max-height:260px;margin:4px">';});
+  }
+
+  if(p4&&c3dImg){
+    html+='<div class="pb"></div><h2>PAGE 4 — 3D RENDER &amp; BUILD GUIDE</h2>';
+    html+='<img src="'+c3dImg+'" style="max-height:320px"><br>';
+  }
+
+  if(p5){
+    html+='<div class="pb"></div><h2>PAGE 5 — COST ESTIMATE</h2>';
+    var total=0;
+    html+='<table><thead><tr><th>Category</th><th>Item Code</th><th>Qty</th><th>Unit (R)</th><th>Sub-Total (R)</th></tr></thead><tbody>';
+    Object.keys(PRICE_DATA).forEach(function(cat){
+      PRICE_DATA[cat].forEach(function(item){
+        if(item.qty>0){
+          var sub=item.qty*item.price; total+=sub;
+          html+='<tr><td>'+(CAT_LABELS[cat]||cat)+'</td><td>'+escH(item.code||item.name)+'</td><td>'+item.qty+'</td><td>'+item.price.toFixed(2)+'</td><td>'+sub.toFixed(2)+'</td></tr>';
+        }
+      });
+    });
+    html+='</tbody></table>';
+    html+='<div style="text-align:right;font-weight:700;font-size:13px;color:#c00;margin-top:8px">ESTIMATED TOTAL: R '+total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",")+'</div>';
+  }
+
+  html+='</body></html>';
+
+  // Use hidden iframe — no popup blocker issues
+  var old=document.getElementById('_printFrame');
+  if(old)old.parentNode.removeChild(old);
+  var ifr=document.createElement('iframe');
+  ifr.id='_printFrame';
+  ifr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(ifr);
+  var doc=ifr.contentDocument||ifr.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+  ifr.contentWindow.focus();
+  setTimeout(function(){
+    ifr.contentWindow.print();
+    setTimeout(function(){var f=document.getElementById('_printFrame');if(f)f.parentNode.removeChild(f);},3000);
+  },400);
+}
+
+function escH(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+// ─── Email modal ─────────────────────────────────────────────────────────────
+function showEmailModal(){
+  var s=document.getElementById('emSupplier'); if(s)s.value=S.supplierEmail||'';
+  var c=document.getElementById('emClient'); if(c)c.value=S.clientEmail||'';
+  document.getElementById('emailModal').style.display='flex';
+}
+function closeEmailModal(){document.getElementById('emailModal').style.display='none';}
+
+function doEmail(type){
+  S.supplierEmail=document.getElementById('emSupplier').value||'';
+  S.clientEmail=document.getElementById('emClient').value||'';
+  var sEl=document.getElementById('supplierEmail'); if(sEl)sEl.value=S.supplierEmail;
+  var cEl=document.getElementById('clientEmail'); if(cEl)cEl.value=S.clientEmail;
+  exportXLSX();
+  var to=type==='supplier'?S.supplierEmail:S.clientEmail;
+  var subj=encodeURIComponent('[Boardware] Cutting List — '+S.jobName+' / '+S.customer);
+  var body=encodeURIComponent(
+    'Dear '+(type==='supplier'?'Boardware Team':'Client')+',' +
+    '\r\n\r\nPlease find attached the cutting list for:' +
+    '\r\nJob: '+S.jobName +
+    '\r\nCustomer: '+S.customer +
+    '\r\nDate: '+new Date().toLocaleDateString('en-ZA') +
+    '\r\nTotal Items: '+(CL?CL.length:0) +
+    '\r\nBoard: '+S.boardMat+' '+S.boardThk+'mm' +
+    '\r\n\r\nThe XLSX has been downloaded - please attach it before sending.' +
+    '\r\n\r\nKind regards,\r\nThe Carpenters - Workshop'
+  );
+  closeEmailModal();
+  window.location.href='mailto:'+encodeURIComponent(to)+'?subject='+subj+'&body='+body;
+}
+</script>
+</body>
+</html>
