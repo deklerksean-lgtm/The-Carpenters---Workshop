@@ -97,7 +97,8 @@ table.bw tr:hover td{background:#0f2040}
 .qty-input{background:#0f3460;border:1px solid #2a3a5c;border-radius:6px;color:#e0e0e0;padding:7px 10px;font-size:0.85rem;outline:none;width:100%}
 .d3-wrap{background:#0a1628;border-radius:10px;overflow:hidden;position:relative;cursor:grab;touch-action:none}
 .d3-wrap:active{cursor:grabbing}
-.d3-controls{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:5px;z-index:10}
+.d3-controls{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:10}
+.d3-view{font-size:9px !important;padding:3px 5px !important;letter-spacing:0.5px;opacity:0.85}
 .d3-btn{background:rgba(10,22,40,.8);border:1px solid #2a3a5c;color:#a0aec0;border-radius:5px;padding:5px 9px;font-size:0.75rem;cursor:pointer;text-align:center}
 .d3-btn:hover{background:#1a2d50;color:#fff}
 canvas{display:block;width:100%}
@@ -1601,9 +1602,13 @@ canvas{display:block;width:100%}
   <div class="d3-wrap" id="d3wrap">
     <canvas id="c3d"></canvas>
     <div class="d3-controls">
-      <div class="d3-btn" onclick="resetView3D()">Reset</div>
+      <div class="d3-btn d3-view" onclick="setView3D(-20,30)" title="Isometric view">Iso</div>
+      <div class="d3-btn d3-view" onclick="setView3D(0,0)" title="Front view">Front</div>
+      <div class="d3-btn d3-view" onclick="setView3D(0,90)" title="Side view">Side</div>
+      <div class="d3-btn d3-view" onclick="setView3D(-88,0)" title="Top view">Top</div>
+      <div class="d3-btn" onclick="resetView3D()" title="Reset to isometric">↺</div>
       <div class="d3-btn" onclick="zoom3D(1.2)">+</div>
-      <div class="d3-btn" onclick="zoom3D(0.83)">-</div>
+      <div class="d3-btn" onclick="zoom3D(0.83)">−</div>
     </div>
   </div>
   <div class="legend" id="leg3d"></div>
@@ -2369,41 +2374,98 @@ function init3D() {
   wrap.style.height=DH+'px'; canvas.style.width=DW+'px'; canvas.style.height=DH+'px';
   canvas.width=DW*dpr; canvas.height=DH*dpr;
   ctx3d=canvas.getContext('2d'); ctx3d.scale(dpr,dpr); cw=DW; ch=DH;
-  // ── Pointer events with capture — fixes sticky drag / miss-release ──────────
-  canvas.style.touchAction='none'; // prevent browser hijacking touch
-  canvas.onpointerdown=function(e){
+  // ── Mouse drag: handlers added to document during drag, removed on release ──
+  canvas.style.userSelect='none';
+  canvas.style.cursor='grab';
+  canvas.onmousedown=function(e){
+    if(e.button!==0)return; // left button only
     e.preventDefault();
-    canvas.setPointerCapture(e.pointerId);
-    dragState={active:true,lastX:e.clientX,lastY:e.clientY,moved:false};
+    dragState={active:true,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};
+    canvas.style.cursor='grabbing';
+    function onMove(ev){
+      var dx=ev.clientX-dragState.lastX,dy=ev.clientY-dragState.lastY;
+      if(Math.abs(ev.clientX-dragState.startX)>6||Math.abs(ev.clientY-dragState.startY)>6)dragState.moved=true;
+      if(ev.shiftKey){cam.tx+=dx;cam.ty+=dy;}
+      else{cam.rotY+=dx*0.4;cam.rotX-=dy*0.3;cam.rotX=Math.max(-80,Math.min(80,cam.rotX));}
+      dragState.lastX=ev.clientX; dragState.lastY=ev.clientY;
+      schedDraw();
+    }
+    function onUp(ev){
+      document.removeEventListener('mousemove',onMove,true);
+      document.removeEventListener('mouseup',onUp,true);
+      canvas.style.cursor='grab';
+      if(!dragState.moved){
+        var rect=canvas.getBoundingClientRect();
+        // Only detect door click if release was inside the canvas
+        if(ev.clientX>=rect.left&&ev.clientX<=rect.right&&ev.clientY>=rect.top&&ev.clientY<=rect.bottom){
+          detectDoorClick((ev.clientX-rect.left)/(rect.width/cw),(ev.clientY-rect.top)/(rect.height/ch));
+        }
+      }
+      dragState.active=false; dragState.moved=false;
+    }
+    document.addEventListener('mousemove',onMove,true);
+    document.addEventListener('mouseup',onUp,true);
   };
-  canvas.onpointermove=function(e){
-    if(!dragState.active)return;
-    var dx=e.clientX-dragState.lastX,dy=e.clientY-dragState.lastY;
-    if(Math.abs(dx)>2||Math.abs(dy)>2)dragState.moved=true;
-    cam.rotY+=dx*0.4; cam.rotX-=dy*0.3;
-    cam.rotX=Math.max(-80,Math.min(80,cam.rotX));
-    dragState.lastX=e.clientX; dragState.lastY=e.clientY;
+  // Scroll to zoom
+  canvas.addEventListener('wheel',function(e){e.preventDefault();zoom3D(e.deltaY<0?1.1:0.91);},{passive:false});
+  // Touch support (pinch-zoom + drag)
+  var lastDist=0;
+  canvas.addEventListener('touchstart',function(e){
+    if(e.touches.length===1)dragState={active:true,startX:e.touches[0].clientX,startY:e.touches[0].clientY,lastX:e.touches[0].clientX,lastY:e.touches[0].clientY,moved:false};
+    else lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  },{passive:true});
+  canvas.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    if(e.touches.length===1&&dragState.active){
+      var dx=e.touches[0].clientX-dragState.lastX,dy=e.touches[0].clientY-dragState.lastY;
+      if(Math.abs(dx)>3||Math.abs(dy)>3)dragState.moved=true;
+      cam.rotY+=dx*0.4; cam.rotX-=dy*0.3; cam.rotX=Math.max(-80,Math.min(80,cam.rotX));
+      dragState.lastX=e.touches[0].clientX; dragState.lastY=e.touches[0].clientY;
+    } else if(e.touches.length===2){
+      var dd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      zoom3D(dd/lastDist); lastDist=dd;
+    }
     schedDraw();
-  };
-  canvas.onpointerup=function(e){
-    // Short tap (not drag) = door click
-    if(!dragState.moved){
-      var rect=canvas.getBoundingClientRect();
-      detectDoorClick((e.clientX-rect.left)/(rect.width/cw),(e.clientY-rect.top)/(rect.height/ch));
+  },{passive:false});
+  canvas.addEventListener('touchend',function(e){
+    if(!dragState.moved&&e.changedTouches.length>0){
+      var t=e.changedTouches[0],rect=canvas.getBoundingClientRect();
+      detectDoorClick((t.clientX-rect.left)/(rect.width/cw),(t.clientY-rect.top)/(rect.height/ch));
     }
     dragState.active=false; dragState.moved=false;
-    try{canvas.releasePointerCapture(e.pointerId);}catch(ex){}
-  };
-  canvas.onpointercancel=function(e){
-    dragState.active=false; dragState.moved=false;
-    try{canvas.releasePointerCapture(e.pointerId);}catch(ex){}
-  };
-  canvas.addEventListener('wheel',function(e){e.preventDefault();zoom3D(e.deltaY<0?1.1:0.91);},{passive:false});
+  },{passive:true});
   draw3D(); buildLegend();
 }
 function resetView3D(){cam={rotX:-20,rotY:30,scale:1,tx:0,ty:0};schedDraw();}
 function zoom3D(f){cam.scale=Math.max(0.25,Math.min(5,cam.scale*f));schedDraw();}
+function setView3D(rx,ry){cam.rotX=rx;cam.rotY=ry;cam.tx=0;cam.ty=0;schedDraw();}
 function schedDraw(){if(rafId)cancelAnimationFrame(rafId);rafId=requestAnimationFrame(draw3D);}
+
+// Board color from material name
+function getBoardColor(name){
+  var n=(name||'').toUpperCase();
+  if(n.indexOf('WHITE')>=0&&n.indexOf('WENGE')<0) return {c:'#e4e8ec',s:'#bbbfc8',d:'#d0d5de'};
+  if(n.indexOf('BLACK')>=0||n.indexOf('EBONY')>=0) return {c:'#1e2228',s:'#333',d:'#2a2e35'};
+  if(n.indexOf('WENGE')>=0||n.indexOf('WALNUT')>=0||n.indexOf('TEAK')>=0) return {c:'#4a2e1a',s:'#3a2010',d:'#5a3a22'};
+  if(n.indexOf('AFRI')>=0||n.indexOf('ROSEWOOD')>=0||n.indexOf('MAHOG')>=0) return {c:'#6b3020',s:'#4a2010',d:'#7a3828'};
+  if(n.indexOf('OAK')>=0||n.indexOf('BALSA')>=0||n.indexOf('PINE')>=0||n.indexOf('BEECH')>=0) return {c:'#c4955a',s:'#a07840',d:'#d4a868'};
+  if(n.indexOf('ASH')>=0&&n.indexOf('AFRI')<0) return {c:'#c8b898',s:'#a09070',d:'#d8c8a8'};
+  if(n.indexOf('GREY')>=0||n.indexOf('GRAY')>=0||n.indexOf('BASALT')>=0||n.indexOf('CONCRETE')>=0||n.indexOf('STONE')>=0) return {c:'#8a8e98',s:'#666',d:'#9aa0aa'};
+  if(n.indexOf('AGED STONE')>=0||n.indexOf('SILHOUETTE')>=0) return {c:'#7a7e85',s:'#555',d:'#8a8e95'};
+  if(n.indexOf('MAPLE')>=0||n.indexOf('BIRCH')>=0) return {c:'#dac08a',s:'#b09060',d:'#e8d09a'};
+  if(n.indexOf('CHERRY')>=0) return {c:'#8b3a2a',s:'#6a2818',d:'#9b4a38'};
+  if(n.indexOf('ACHOR')>=0||n.indexOf('ANCHOR')>=0) return {c:'#a89060',s:'#806840',d:'#b8a070'};
+  if(n.indexOf('COLOUR 1')>=0) return {c:'#3a6b8a',s:'#2a4a60',d:'#4a7b9a'};
+  if(n.indexOf('COLOUR 2')>=0) return {c:'#c07030',s:'#9a5010',d:'#d08040'};
+  if(n.indexOf('COLOUR 3')>=0) return {c:'#3a7a50',s:'#2a5a38',d:'#4a8a60'};
+  if(n.indexOf('COLOUR 4')>=0) return {c:'#6a3a8a',s:'#4a2068',d:'#7a4a9a'};
+  if(n.indexOf('COLOUR 5')>=0) return {c:'#c03030',s:'#9a1818',d:'#d04040'};
+  if(n.indexOf('COLOUR 6')>=0) return {c:'#2a8a7a',s:'#1a6a5a',d:'#3a9a8a'};
+  if(n.indexOf('HARDBOARD')>=0||n.indexOf('H/B')>=0||n.indexOf('PEGBOARD')>=0) return {c:'#c8b890',s:'#a09060',d:'#d8c8a0'};
+  if(n.indexOf('BROWN')>=0) return {c:'#7a5030',s:'#5a3010',d:'#8a6040'};
+  // Generic: try to detect light vs dark from name hints
+  return {c:'#d8dce8',s:'#aaa',d:'#c8ccd8'};
+}
 
 function draw3D() {
   if(!ctx3d)return;
@@ -2424,11 +2486,16 @@ function draw3D() {
   var _ctr=proj(0,sc(maxH*0.5),sc(avgD*0.5));
   var _ox=-_ctr.sx*cam.scale, _oy=-_ctr.sy*cam.scale;
   var faceBuf=[];
+  // Directional lighting helpers
+  function _faceNrm(pts){var p0=pts[0],p1=pts[1],p2=pts[2],ax=p1[0]-p0[0],ay=p1[1]-p0[1],az=p1[2]-p0[2],bx=p2[0]-p0[0],by=p2[1]-p0[1],bz=p2[2]-p0[2],nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx,l=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;return[nx/l,ny/l,nz/l];}
+  function _litHex(h,m){if(!h||h[0]!=='#'||h.length<7)return h;var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgb('+Math.min(255,Math.round(r*m))+','+Math.min(255,Math.round(g*m))+','+Math.min(255,Math.round(b*m))+')';}
   function bufFace(pts,fill,stroke,lw,alpha){
     var cx=0,cy=0,cz=0;
     pts.forEach(function(p){cx+=p[0];cy+=p[1];cz+=p[2];});
     cx/=pts.length;cy/=pts.length;cz/=pts.length;
-    faceBuf.push({depth:proj(cx,cy,cz).depth,pts:pts,fill:fill,stroke:stroke||'rgba(0,0,0,0.3)',lw:lw||0.5,alpha:alpha||1});
+    var litFill=fill;
+    if(fill&&fill.length===7&&fill[0]==='#'){var _n=_faceNrm(pts),_d=_n[0]*0.408+_n[1]*0.816+_n[2]*(-0.408);litFill=_litHex(fill,0.35+0.65*Math.max(0,_d));}
+    faceBuf.push({depth:proj(cx,cy,cz).depth,pts:pts,fill:litFill,stroke:stroke||'rgba(0,0,0,0.3)',lw:lw||0.5,alpha:alpha||1});
   }
   function drawFace(pts,fill,stroke,lw,alpha){
     var ps=pts.map(function(p){return toSc(proj(p[0],p[1],p[2]));}); 
@@ -2438,20 +2505,21 @@ function draw3D() {
     ctx.strokeStyle=stroke||'rgba(0,0,0,0.3)';ctx.lineWidth=lw||0.5;ctx.stroke();ctx.globalAlpha=1;
   }
   var xOff=-(totW/2);
+  var bc=getBoardColor(S.boardMat);
   S.cabinets.forEach(function(cab,cab_ci) {
     var H=cab.H,W=cab.W,D=cab.D,shelves=cab.shelves,doors=cab.doors,type=cab.type;
     var bT=S.boardThk;
     var x0=sc(xOff),x1=sc(xOff+W),y0=0,y1=sc(H),z0=0,z1=sc(D),bTs=sc(bT);
-    bufFace([[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[x0,y0,z1]],'#a0a8b8','#555');
-    bufFace([[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],'#a0a8b8','#555');
-    bufFace([[x0,y0,z0],[x0,y1,z0],[x0+bTs,y1,z0],[x0+bTs,y0,z0]],'#c8cdd8','#888');
-    bufFace([[x1-bTs,y0,z0],[x1-bTs,y1,z0],[x1,y1,z0],[x1,y0,z0]],'#c8cdd8','#888');
-    bufFace([[x0+bTs,y1,z0],[x1-bTs,y1,z0],[x1-bTs,y1,z1],[x0+bTs,y1,z1]],'#d8dce8','#888');
-    bufFace([[x0+bTs,y1-bTs,z0],[x1-bTs,y1-bTs,z0],[x1-bTs,y1,z0],[x0+bTs,y1,z0]],'#c0c8d8','#888');
-    bufFace([[x0+bTs,y0+bTs,z0],[x1-bTs,y0+bTs,z0],[x1-bTs,y0+bTs,z1],[x0+bTs,y0+bTs,z1]],'#d8dce8','#888');
-    bufFace([[x0+bTs,y0,z0],[x1-bTs,y0,z0],[x1-bTs,y0+bTs,z0],[x0+bTs,y0+bTs,z0]],'#c0c8d8','#888');
+    bufFace([[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[x0,y0,z1]],bc.s,'#444');
+    bufFace([[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],bc.s,'#444');
+    bufFace([[x0,y0,z0],[x0,y1,z0],[x0+bTs,y1,z0],[x0+bTs,y0,z0]],bc.c,'#888');
+    bufFace([[x1-bTs,y0,z0],[x1-bTs,y1,z0],[x1,y1,z0],[x1,y0,z0]],bc.c,'#888');
+    bufFace([[x0+bTs,y1,z0],[x1-bTs,y1,z0],[x1-bTs,y1,z1],[x0+bTs,y1,z1]],bc.c,'#888');
+    bufFace([[x0+bTs,y1-bTs,z0],[x1-bTs,y1-bTs,z0],[x1-bTs,y1,z0],[x0+bTs,y1,z0]],bc.d,'#888');
+    bufFace([[x0+bTs,y0+bTs,z0],[x1-bTs,y0+bTs,z0],[x1-bTs,y0+bTs,z1],[x0+bTs,y0+bTs,z1]],bc.c,'#888');
+    bufFace([[x0+bTs,y0,z0],[x1-bTs,y0,z0],[x1-bTs,y0+bTs,z0],[x0+bTs,y0+bTs,z0]],bc.d,'#888');
     if(S.includeBack){var bkS=sc(Math.min(S.backThk,6));bufFace([[x0+bTs,y0+bTs,z1-bkS],[x1-bTs,y0+bTs,z1-bkS],[x1-bTs,y1-bTs,z1-bkS],[x0+bTs,y1-bTs,z1-bkS]],'#8a8fa0','#555',0.4,0.85);}
-    for(var sv=1;sv<=shelves;sv++){var sy=y0+bTs+(y1-2*bTs)*sv/(shelves+1);bufFace([[x0+bTs,sy,z0],[x1-bTs,sy,z0],[x1-bTs,sy,z1-sc(55)],[x0+bTs,sy,z1-sc(55)]],'#ccd0dc','#888',0.3,0.9);}
+    for(var sv=1;sv<=shelves;sv++){var sy=y0+bTs+(y1-2*bTs)*sv/(shelves+1);bufFace([[x0+bTs,sy,z0],[x1-bTs,sy,z0],[x1-bTs,sy,z1-sc(55)],[x0+bTs,sy,z1-sc(55)]],bc.c,'#888',0.3,0.9);}
     if(doors>0){
       var dET2=sc(S.doorEdgeThk);
       var dspan_=(x1-x0-2*bTs)/doors;
@@ -2461,7 +2529,7 @@ function draw3D() {
         var dkR_=dkL_+dspan_-sc(2);             // right edge
         var dky0_=y0+dET2,dky1_=y1-dET2;
         var dang_=(doorAngles[cab_ci+'-'+dv]||0)*Math.PI/180;
-        var dcol=dang_>0.05?'#c8d4e8':'#dde0e8';
+        var dcol=dang_>0.05?bc.c:bc.d;
         // Determine hinge side: L=left hinge, R=right hinge, S=split(left half→left hinge, right half→right hinge)
         var hingeOnLeft_=(hinge_==='L')||(hinge_==='S'&&dv<doors/2);
         var dHingeX_,dFreeX_,dFreeZ_,dHandX_;
@@ -2476,7 +2544,7 @@ function draw3D() {
         }
         var hmy_=(dky0_+dky1_)/2,hHandZ_=-dspan_*0.82*Math.sin(dang_);
         // Ghost closed panel
-        bufFace([[dkL_,dky0_,0],[dkR_,dky0_,0],[dkR_,dky1_,0],[dkL_,dky1_,0]],'#b0bcc8','#888',0.3,0.25);
+        bufFace([[dkL_,dky0_,0],[dkR_,dky0_,0],[dkR_,dky1_,0],[dkL_,dky1_,0]],bc.s,'#777',0.3,0.25);
         // Animated door panel (hinge side stays, free edge swings)
         bufFace([[dHingeX_,dky0_,0],[dFreeX_,dky0_,dFreeZ_],[dFreeX_,dky1_,dFreeZ_],[dHingeX_,dky1_,0]],dcol,'#aaa');
         // Handle bar near free edge
@@ -2489,6 +2557,10 @@ function draw3D() {
   });
   faceBuf.sort(function(a,b){return b.depth-a.depth;});
   faceBuf.forEach(function(f){drawFace(f.pts,f.fill,f.stroke,f.lw,f.alpha);});
+  // Ground line
+  var _maxD=Math.max.apply(null,S.cabinets.map(function(c){return c.D;}));
+  var _gLf=toSc(proj(sc(-totW/2-150),0,0)),_gRf=toSc(proj(sc(totW/2+150),0,0));
+  ctx.beginPath();ctx.moveTo(_gLf[0],_gLf[1]);ctx.lineTo(_gRf[0],_gRf[1]);ctx.strokeStyle='rgba(99,179,237,0.22)';ctx.lineWidth=1.5;ctx.setLineDash([]);ctx.stroke();
   // Labels
   xOff=-(totW/2);
   ctx.textAlign='center';
@@ -2497,7 +2569,9 @@ function draw3D() {
     var bT=S.boardThk;
     var x0=sc(xOff),x1=sc(xOff+W),y0=0,y1=sc(H),bTs=sc(bT);
     var topM=toSc(proj((x0+x1)/2,y1+sc(35),0));
-    ctx.fillStyle='#e0e4ee';ctx.font='bold 9px Segoe UI,Arial';ctx.fillText('UNIT '+(ci+1)+': '+W+'mm',topM[0],topM[1]);
+    var _uLabel=(cab.name&&cab.name.trim()&&cab.name!=='Cabinet')?cab.name:('U'+(ci+1));
+    ctx.fillStyle='#e0e4ee';ctx.font='bold 9px Segoe UI,Arial';
+    ctx.fillText(_uLabel+': '+W+'\u00d7'+H+'\u00d7'+D+'mm',topM[0],topM[1]);
     if(ci===0){
       var hB=toSc(proj(x0-sc(65),y0,0)),hT=toSc(proj(x0-sc(65),y1,0));
       ctx.beginPath();ctx.moveTo(hB[0],hB[1]);ctx.lineTo(hT[0],hT[1]);ctx.strokeStyle='#e94560';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
@@ -2609,104 +2683,6 @@ function navToStep(n){
     setTimeout(function(){try{buildCostEstimate();}catch(e){}},80);
   }
 }
-</script>
-
-<script>
-// ─── PWA Install prompt ───────────────────────────────────────────────────────
-var _deferredInstall = null;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  _deferredInstall = e;
-  document.getElementById('pwaInstallBar').style.display = 'block';
-});
-function pwaInstall() {
-  if (_deferredInstall) { _deferredInstall.prompt(); _deferredInstall = null; }
-  document.getElementById('pwaInstallBar').style.display = 'none';
-}
-window.addEventListener('appinstalled', function() {
-  document.getElementById('pwaInstallBar').style.display = 'none';
-});
-
-// ─── Project save / load ──────────────────────────────────────────────────────
-var PROJ_KEY = 'carpws_projects';
-
-function getProjects() {
-  try { return JSON.parse(localStorage.getItem(PROJ_KEY) || '{}'); } catch(e) { return {}; }
-}
-function saveProject() {
-  var name = S.jobName && S.jobName !== 'Job' ? S.jobName : prompt('Project name:', S.jobName || 'My Project');
-  if (!name) return;
-  S.jobName = name;
-  var projects = getProjects();
-  projects[name] = { saved: new Date().toISOString(), state: JSON.parse(JSON.stringify(S)) };
-  localStorage.setItem(PROJ_KEY, JSON.stringify(projects));
-  showSavedTag();
-  alert('Project "' + name + '" saved to browser storage.');
-}
-function loadProject() {
-  var projects = getProjects();
-  var keys = Object.keys(projects);
-  if (keys.length === 0) { alert('No saved projects found.'); return; }
-  var nl = String.fromCharCode(10);
-  var list = keys.map(function(k,i){ return (i+1)+'. '+k+' ('+projects[k].saved.slice(0,10)+')'; }).join(nl);
-  var choice = prompt('Choose project number:' + nl + list);
-  if (!choice) return;
-  var idx = parseInt(choice) - 1;
-  if (idx < 0 || idx >= keys.length) { alert('Invalid choice.'); return; }
-  var key = keys[idx];
-  Object.assign(S, projects[key].state);
-  alert('Project "' + key + '" loaded. Return to Step 1 to review settings.');
-  setStep(1);
-}
-function exportProject() {
-  var name = (S.jobName || 'project').replace(/\s+/g,'_');
-  var blob = new Blob([JSON.stringify({version:1, saved: new Date().toISOString(), state: S}, null, 2)], {type:'application/json'});
-  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'CarpWS_' + name + '.json'; a.click(); URL.revokeObjectURL(a.href);
-}
-function importProject(input) {
-  var file = input.files[0]; if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var data = JSON.parse(e.target.result);
-      if (data.state) {
-        Object.assign(S, data.state);
-        alert('Project "' + (S.jobName||'') + '" imported. Review settings from Step 1.');
-        setStep(1);
-      } else { alert('Invalid project file.'); }
-    } catch(err) { alert('Could not read file: ' + err.message); }
-    input.value = '';
-  };
-  reader.readAsText(file);
-}
-function newProject() {
-  if (!confirm('Start a new project? Unsaved work will be lost.')) return;
-  S = {customer:'',jobName:'',contactNo:'',address:'',hingeType:'',boardMat:'',boardThk:16,grain:'',
-    cabEdgeMat:'',edgeThk:2,diffDoorEdge:false,doorEdgeMat:'',doorEdgeThk:2,
-    includeBack:false,backType:'',backThk:3,cabinets:[]};
-  CL = [];
-  setStep(1);
-  location.reload();
-}
-function showSavedTag() {
-  var t = document.getElementById('savedTag');
-  t.style.display = 'flex';
-  setTimeout(function(){ t.style.display = 'none'; }, 2500);
-}
-// Auto-restore last session
-(function() {
-  try {
-    var last = localStorage.getItem('carpws_last');
-    if (last) { var d = JSON.parse(last); if (d && d.customer) Object.assign(S, d); }
-  } catch(e) {}
-})();
-// Auto-save on visibility change (phone background / tab switch)
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'hidden') {
-    try { localStorage.setItem('carpws_last', JSON.stringify(S)); } catch(e) {}
-  }
-});
 </script>
 </body>
 </html>
