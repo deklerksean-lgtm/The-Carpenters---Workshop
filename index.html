@@ -2369,18 +2369,36 @@ function init3D() {
   wrap.style.height=DH+'px'; canvas.style.width=DW+'px'; canvas.style.height=DH+'px';
   canvas.width=DW*dpr; canvas.height=DH*dpr;
   ctx3d=canvas.getContext('2d'); ctx3d.scale(dpr,dpr); cw=DW; ch=DH;
-  canvas.onmousedown=function(e){dragState={active:true,lastX:e.clientX,lastY:e.clientY,moved:false};};
-  canvas.onmousemove=function(e){if(!dragState.active)return;var dx=e.clientX-dragState.lastX,dy=e.clientY-dragState.lastY;if(Math.abs(dx)>3||Math.abs(dy)>3)dragState.moved=true;cam.rotY+=dx*0.4;cam.rotX-=dy*0.3;cam.rotX=Math.max(-80,Math.min(80,cam.rotX));dragState.lastX=e.clientX;dragState.lastY=e.clientY;schedDraw();};
-  canvas.onmouseup=function(e){
-    if(!dragState.moved){var rect=canvas.getBoundingClientRect();detectDoorClick((e.clientX-rect.left)/(rect.width/cw),(e.clientY-rect.top)/(rect.height/ch));}
-    dragState.active=false;dragState.moved=false;
+  // ── Pointer events with capture — fixes sticky drag / miss-release ──────────
+  canvas.style.touchAction='none'; // prevent browser hijacking touch
+  canvas.onpointerdown=function(e){
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    dragState={active:true,lastX:e.clientX,lastY:e.clientY,moved:false};
   };
-  canvas.onmouseleave=function(){dragState.active=false;};
+  canvas.onpointermove=function(e){
+    if(!dragState.active)return;
+    var dx=e.clientX-dragState.lastX,dy=e.clientY-dragState.lastY;
+    if(Math.abs(dx)>2||Math.abs(dy)>2)dragState.moved=true;
+    cam.rotY+=dx*0.4; cam.rotX-=dy*0.3;
+    cam.rotX=Math.max(-80,Math.min(80,cam.rotX));
+    dragState.lastX=e.clientX; dragState.lastY=e.clientY;
+    schedDraw();
+  };
+  canvas.onpointerup=function(e){
+    // Short tap (not drag) = door click
+    if(!dragState.moved){
+      var rect=canvas.getBoundingClientRect();
+      detectDoorClick((e.clientX-rect.left)/(rect.width/cw),(e.clientY-rect.top)/(rect.height/ch));
+    }
+    dragState.active=false; dragState.moved=false;
+    try{canvas.releasePointerCapture(e.pointerId);}catch(ex){}
+  };
+  canvas.onpointercancel=function(e){
+    dragState.active=false; dragState.moved=false;
+    try{canvas.releasePointerCapture(e.pointerId);}catch(ex){}
+  };
   canvas.addEventListener('wheel',function(e){e.preventDefault();zoom3D(e.deltaY<0?1.1:0.91);},{passive:false});
-  var lastDist=0;
-  canvas.addEventListener('touchstart',function(e){if(e.touches.length===1)dragState={active:true,lastX:e.touches[0].clientX,lastY:e.touches[0].clientY};else lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
-  canvas.addEventListener('touchmove',function(e){e.preventDefault();if(e.touches.length===1&&dragState.active){cam.rotY+=(e.touches[0].clientX-dragState.lastX)*0.4;cam.rotX-=(e.touches[0].clientY-dragState.lastY)*0.3;cam.rotX=Math.max(-80,Math.min(80,cam.rotX));dragState.lastX=e.touches[0].clientX;dragState.lastY=e.touches[0].clientY;}else if(e.touches.length===2){var dd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);zoom3D(dd/lastDist);lastDist=dd;}schedDraw();},{passive:false});
-  canvas.addEventListener('touchend',function(){dragState.active=false;},{passive:true});
   draw3D(); buildLegend();
 }
 function resetView3D(){cam={rotX:-20,rotY:30,scale:1,tx:0,ty:0};schedDraw();}
