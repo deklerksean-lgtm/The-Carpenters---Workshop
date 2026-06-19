@@ -1,2 +1,2 @@
 v1.3.12
-Fix: Admin panel now loads phone, chip photo, logo on every open. Phone save shows confirmation.
+v1.3.12 — Admin settings persist on re-open (phone, chip photo, logo), logo upload fixed, WhatsApp messages personalised
