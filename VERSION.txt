@@ -1,0 +1,2 @@
+v1.3.12
+Fix: Admin panel now loads phone, chip photo, logo on every open. Phone save shows confirmation.
