@@ -1,2 +1,2 @@
-v1.3.12
-v1.3.12 — Admin settings persist on re-open (phone, chip photo, logo), logo upload fixed, WhatsApp messages personalised
+v1.3.15
+Central Cloud Storage via GitHub Gist — Projects sync across Desktop, Web and Mobile.
